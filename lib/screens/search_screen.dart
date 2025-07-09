@@ -86,36 +86,39 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ],
             ),
-            child: TextField(
-              controller: _searchController,
-              style: TextStyle(color: theme.colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Search by name, company, or location',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white54 : Colors.grey.shade400,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
+            child: Semantics(
+              label: 'Search for interns by name, company, or location',
+              child: TextField(
+                controller: _searchController,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                decoration: InputDecoration(
+                  hintText: 'Search by name, company, or location',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.grey.shade400,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                    size: 20,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+                  ),
+                  filled: true,
+                  fillColor: theme.cardColor,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: isDark ? Colors.white54 : Colors.grey.shade500,
-                  size: 20,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-                ),
-                filled: true,
-                fillColor: theme.cardColor,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
           ),
@@ -207,64 +210,74 @@ class _SearchScreenState extends State<SearchScreen> {
                                         ),
                                       ],
                                     ),
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.all(16),
-                                      leading: CircleAvatar(
-                                        radius: 24,
-                                        backgroundImage: user['profile_picture_url'] != null
-                                            ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                            : null,
-                                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey.shade200,
-                                        child: user['profile_picture_url'] == null
-                                            ? Icon(Icons.person, size: 24, color: isDark ? Colors.white : Colors.grey.shade600)
-                                            : null,
-                                      ),
-                                      title: Text(
-                                        '${user['first_name']} ${user['last_name']}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: theme.colorScheme.onSurface,
-                                          letterSpacing: -0.3,
+                                    child: Semantics(
+                                      label: 'Search result for ${user['first_name']} ${user['last_name']}',
+                                      child: ListTile(
+                                        contentPadding: const EdgeInsets.all(16),
+                                        leading: Semantics(
+                                          label: 'Profile picture of ${user['first_name']} ${user['last_name']}',
+                                          image: true,
+                                          child: CircleAvatar(
+                                            radius: 24,
+                                            backgroundImage: user['profile_picture_url'] != null
+                                                ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                                : null,
+                                            backgroundColor: isDark ? Colors.grey[800] : Colors.grey.shade200,
+                                            child: user['profile_picture_url'] == null
+                                                ? Icon(Icons.person, size: 24, color: isDark ? Colors.white : Colors.grey.shade600)
+                                                : null,
+                                          ),
                                         ),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          if (user['company'] != null && user['company'].toString().isNotEmpty)
-                                            Text(
-                                              user['company'],
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isDark ? Colors.white70 : Colors.grey.shade600,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          if (user['location'] != null && user['location'].toString().isNotEmpty)
-                                            Text(
-                                              user['location'],
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      trailing: Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF2563EB),
-                                          borderRadius: BorderRadius.circular(8),
+                                        title: Text(
+                                          '${user['first_name']} ${user['last_name']}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                            color: theme.colorScheme.onSurface,
+                                            letterSpacing: -0.3,
+                                          ),
                                         ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.person, color: Colors.white, size: 20),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => ViewProfileScreen(profile: user),
+                                        subtitle: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (user['company'] != null && user['company'].toString().isNotEmpty)
+                                              Text(
+                                                user['company'],
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: isDark ? Colors.white70 : Colors.grey.shade600,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
-                                            );
-                                          },
+                                            if (user['location'] != null && user['location'].toString().isNotEmpty)
+                                              Text(
+                                                user['location'],
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: isDark ? Colors.white54 : Colors.grey.shade500,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        trailing: Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF2563EB),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Semantics(
+                                            label: 'View profile',
+                                            child: IconButton(
+                                              icon: const Icon(Icons.person, color: Colors.white, size: 20),
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => ViewProfileScreen(profile: user),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),

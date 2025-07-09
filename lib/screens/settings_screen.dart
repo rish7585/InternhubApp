@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../screens/login_screen.dart';
 import '../notifiers/theme_notifier.dart';
 import '../notifiers/locale_notifier.dart';
+import '../services/auth_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -18,8 +18,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool postsNotif = true;
   bool roommateNotif = true;
   bool isProfilePublic = true;
-  String userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+  String userId = '';
   String accountCreated = '';
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -28,21 +29,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _fetchAccountInfo() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _authService.currentUser;
     if (user != null) {
       setState(() {
-        accountCreated = user.createdAt?.toString().split('T').first ?? '';
+        userId = user.id;
+        accountCreated = user.createdAt.toString().split('T').first;
       });
-    }
-  }
-
-  Future<void> _logout(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
     }
   }
 
@@ -53,73 +45,115 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('Delete Account'),
         content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
         actions: [
-          TextButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(context, false)),
-          TextButton(child: const Text('Delete'), onPressed: () => Navigator.pop(context, true)),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
     if (confirmed == true) {
-      // TODO: Implement account deletion logic
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account deletion not implemented.')));
+      // Show informative message about account deletion
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account deletion feature is under development. Please contact support for assistance.'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await _authService.signOut();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
   void _showBlockedUsers() {
-    // TODO: Implement blocked users management
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Blocked Users'),
-        content: const Text('Blocked users management coming soon.'),
-        actions: [TextButton(child: const Text('OK'), onPressed: () => Navigator.pop(context))],
+        content: const Text('Blocked users management is coming soon. You\'ll be able to view and manage users you\'ve blocked from messaging you.'),
+        actions: [
+          TextButton(
+            child: const Text('OK'), 
+            onPressed: () => Navigator.pop(context)
+          ),
+        ],
       ),
     );
   }
 
   void _showFAQ() {
-    // TODO: Link to FAQ/help
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('FAQ / Help'),
-        content: const Text('FAQ and help coming soon.'),
-        actions: [TextButton(child: const Text('OK'), onPressed: () => Navigator.pop(context))],
+        content: const Text('Help and FAQ section is coming soon. For now, you can contact support for assistance.'),
+        actions: [
+          TextButton(
+            child: const Text('OK'), 
+            onPressed: () => Navigator.pop(context)
+          ),
+        ],
       ),
     );
   }
 
   void _contactSupport() {
-    // TODO: Implement contact support
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Contact Support'),
-        content: const Text('Contact support coming soon.'),
-        actions: [TextButton(child: const Text('OK'), onPressed: () => Navigator.pop(context))],
+        content: const Text('Support contact feature is coming soon. For now, please email support@internhub.com for assistance.'),
+        actions: [
+          TextButton(
+            child: const Text('OK'), 
+            onPressed: () => Navigator.pop(context)
+          ),
+        ],
       ),
     );
   }
 
   void _showTerms() {
-    // TODO: Link to Terms of Service
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Terms of Service'),
-        content: const Text('Terms of Service coming soon.'),
-        actions: [TextButton(child: const Text('OK'), onPressed: () => Navigator.pop(context))],
+        content: const Text('Terms of Service are coming soon. This will outline the rules and guidelines for using InternHub.'),
+        actions: [
+          TextButton(
+            child: const Text('OK'), 
+            onPressed: () => Navigator.pop(context)
+          ),
+        ],
       ),
     );
   }
 
   void _showPrivacy() {
-    // TODO: Link to Privacy Policy
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Privacy Policy'),
-        content: const Text('Privacy Policy coming soon.'),
-        actions: [TextButton(child: const Text('OK'), onPressed: () => Navigator.pop(context))],
+        content: const Text('Privacy Policy is coming soon. This will explain how we collect, use, and protect your personal information.'),
+        actions: [
+          TextButton(
+            child: const Text('OK'), 
+            onPressed: () => Navigator.pop(context)
+          ),
+        ],
       ),
     );
   }
@@ -128,18 +162,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final localeNotifier = Provider.of<LocaleNotifier>(context);
-    String theme = themeNotifier.themeMode.toString().split('.').last;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    String themeMode = themeNotifier.themeMode.toString().split('.').last;
     String language = localeNotifier.locale.languageCode;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Go back',
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
         children: [
           // Account Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('Account', style: Theme.of(context).textTheme.titleMedium),
+            child: Semantics(
+              header: true,
+              child: Text(
+                'Account', 
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -147,8 +199,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.badge),
-                  title: Text('User ID: $userId'),
-                  subtitle: accountCreated.isNotEmpty ? Text('Joined: $accountCreated') : null,
+                  title: Text(
+                    'User ID: $userId',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: accountCreated.isNotEmpty 
+                      ? Text(
+                          'Joined: $accountCreated',
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ) 
+                      : null,
                 ),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
@@ -167,7 +231,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Notifications Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('Notifications', style: Theme.of(context).textTheme.titleMedium),
+            child: Semantics(
+              header: true,
+              child: Text(
+                'Notifications', 
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -204,7 +277,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Privacy & Security Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('Privacy & Security', style: Theme.of(context).textTheme.titleMedium),
+            child: Semantics(
+              header: true,
+              child: Text(
+                'Privacy & Security', 
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -225,7 +307,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: const Icon(Icons.security),
                   title: const Text('Two-Factor Authentication'),
                   subtitle: const Text('Coming soon!'),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('2FA coming soon!'))),
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Two-Factor Authentication'),
+                      content: const Text('Two-factor authentication is coming soon. This will add an extra layer of security to your account by requiring a second form of verification when signing in.'),
+                      actions: [
+                        TextButton(
+                          child: const Text('OK'), 
+                          onPressed: () => Navigator.pop(context)
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -234,7 +328,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // App Preferences Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('App Preferences', style: Theme.of(context).textTheme.titleMedium),
+            child: Semantics(
+              header: true,
+              child: Text(
+                'App Preferences', 
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -244,7 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: const Icon(Icons.brightness_6),
                   title: const Text('Theme'),
                   trailing: DropdownButton<String>(
-                    value: theme,
+                    value: themeMode,
                     items: const [
                       DropdownMenuItem(value: 'system', child: Text('System')),
                       DropdownMenuItem(value: 'light', child: Text('Light')),
@@ -274,7 +377,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       final effectiveTheme = effectiveBrightness == Brightness.dark ? 'Dark Mode' : 'Light Mode';
                       return Text(
                         'Currently using: $effectiveTheme',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.grey, 
+                          fontSize: 12
+                        ),
                       );
                     },
                   ),
@@ -302,7 +408,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Support & About Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text('Support & About', style: Theme.of(context).textTheme.titleMedium),
+            child: Semantics(
+              header: true,
+              child: Text(
+                'Support & About', 
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

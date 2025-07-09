@@ -1,9 +1,15 @@
+/// Roommate Finder Screen
+/// Shows the current user's roommate profile and a list of other roommate posts.
+/// Allows searching, filtering, and (soon) posting roommate ads.
 import 'package:flutter/material.dart';
 import 'create_roommate_profile_screen.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/roommate_profile.dart';
+import 'chat_screen.dart'; // Added import for ChatScreen
 
+/// The main screen for finding roommates.
 class RoommateFinderScreen extends StatefulWidget {
   const RoommateFinderScreen({Key? key}) : super(key: key);
 
@@ -16,8 +22,8 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
   String _selectedLocation = 'Any';
   double _maxBudget = 2000;
   bool _showFilters = false;
-  Map<String, dynamic>? _myProfile;
-  List<Map<String, dynamic>> _roommatePosts = [];
+  RoommateProfile? _myProfile;
+  List<RoommateProfile> _roommatePosts = [];
   bool _isLoading = true;
 
   @override
@@ -26,6 +32,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
     _fetchMyProfileAndPosts();
   }
 
+  /// Fetches the current user's roommate profile and all other roommate posts.
   Future<void> _fetchMyProfileAndPosts() async {
     setState(() => _isLoading = true);
     final user = Supabase.instance.client.auth.currentUser;
@@ -36,7 +43,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         .select()
         .eq('user_id', user.id)
         .limit(1);
-    if (myProfiles == null || myProfiles.isEmpty) {
+    if (myProfiles.isEmpty) {
       // Redirect to create profile if none exists
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacement(
@@ -45,14 +52,16 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       });
       return;
     }
-    _myProfile = myProfiles[0];
+    _myProfile = RoommateProfile.fromJson(myProfiles[0]);
     // Fetch roommate posts (excluding current user's own post)
     final posts = await Supabase.instance.client
         .from('roommate_profiles')
         .select()
         .neq('user_id', user.id);
     setState(() {
-      _roommatePosts = List<Map<String, dynamic>>.from(posts);
+      _roommatePosts = List<Map<String, dynamic>>.from(posts)
+          .map((json) => RoommateProfile.fromJson(json))
+          .toList();
       _isLoading = false;
     });
   }
@@ -104,47 +113,197 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implement roommate ad posting
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Post roommate ad coming soon!')),
+          // Navigate to create roommate profile screen for posting ads
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CreateRoommateProfileScreen()),
           );
         },
+        tooltip: 'Post roommate ad',
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildMyProfileCard(Map<String, dynamic> profile) {
+  /// Builds the card for the current user's profile.
+  Widget _buildMyProfileCard(RoommateProfile profile) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: isDark ? const Color(0xFF23262F) : Colors.indigo[50],
-      child: ListTile(
-        leading: CircleAvatar(
-          radius: 30,
-          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-          child: Icon(Icons.person, size: 40, color: isDark ? Colors.white : Colors.indigo),
-        ),
-        title: Text(
-          profile['name'] ?? '',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
+    return Semantics(
+      container: true,
+      label: 'Your roommate profile card',
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: isDark ? const Color(0xFF23262F) : Colors.indigo[50],
+        child: ListTile(
+          leading: Semantics(
+            label: 'Your profile picture',
+            image: true,
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+              child: Icon(Icons.person, size: 40, color: isDark ? Colors.white : Colors.indigo),
+            ),
+          ),
+          title: Semantics(
+            label: 'Your name',
+            child: Text(
+              profile.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                label: 'Location',
+                child: Text(profile.location, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+              ),
+              Semantics(
+                label: 'Budget',
+                child: Text(' 24${profile.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+              ),
+              Semantics(
+                label: 'Bio',
+                child: Text(profile.personalBio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+              ),
+            ],
+          ),
+          trailing: Tooltip(
+            message: 'Edit your profile',
+            child: AppButton(
+              label: 'Edit',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => CreateRoommateProfileScreen()),
+                );
+              },
+            ),
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(profile['location'] ?? '', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-            Text(' 24${profile['budget']?.toStringAsFixed(0) ?? ''}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-            Text(profile['personal_bio'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
-          ],
-        ),
-        trailing: AppButton(
-          label: 'Edit',
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CreateRoommateProfileScreen()),
+      ),
+    );
+  }
+
+  /// Builds a card for another roommate's post.
+  Widget _buildRoommateCard(RoommateProfile post) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Semantics(
+      container: true,
+      label: 'Roommate post card for ${post.name}',
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: isDark ? const Color(0xFF23262F) : Colors.white,
+        child: ListTile(
+          leading: Semantics(
+            label: 'Profile picture of ${post.name}',
+            image: true,
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+              child: Icon(Icons.person, size: 40, color: isDark ? Colors.white : Colors.grey),
+            ),
+          ),
+          title: Semantics(
+            label: 'Name',
+            child: Text(
+              post.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                label: 'Location',
+                child: Text(post.location, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+              ),
+              Semantics(
+                label: 'Budget',
+                child: Text(' 24${post.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+              ),
+              Semantics(
+                label: 'Bio',
+                child: Text(post.personalBio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+              ),
+            ],
+          ),
+          trailing: Tooltip(
+            message: 'Message ${post.name}',
+            child: AppButton(
+              label: '',
+              icon: Icons.message_outlined,
+              onPressed: () {
+                // Navigate to chat screen with the roommate
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      otherUserId: post.userId,
+                      otherUserName: post.name,
+                      otherUserProfilePic: null, // TODO: Add profile picture to roommate profile
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          onTap: () {
+            // Show detailed roommate profile in a dialog
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(post.name),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Location: ${post.location}'),
+                      Text('Budget: \$${post.budget.toStringAsFixed(0)}/month'),
+                      Text('School: ${post.school}'),
+                      Text('Company: ${post.company}'),
+                      const SizedBox(height: 8),
+                      const Text('Bio:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(post.personalBio),
+                      if (post.interests.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        const Text('Interests:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Wrap(
+                          children: post.interests.map((interest) => 
+                            Chip(label: Text(interest), labelStyle: const TextStyle(fontSize: 12))
+                          ).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Navigate to chat
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            otherUserId: post.userId,
+                            otherUserName: post.name,
+                            otherUserProfilePic: null,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Message'),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -152,46 +311,7 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
     );
   }
 
-  Widget _buildRoommateCard(Map<String, dynamic> post) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: isDark ? const Color(0xFF23262F) : Colors.white,
-      child: ListTile(
-        leading: CircleAvatar(
-          radius: 30,
-          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-          child: Icon(Icons.person, size: 40, color: isDark ? Colors.white : Colors.grey),
-        ),
-        title: Text(
-          post['name'] ?? '',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(post['location'] ?? '', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-            Text(' 24${post['budget']?.toStringAsFixed(0) ?? ''}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-            Text(post['personal_bio'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
-          ],
-        ),
-        trailing: AppButton(
-          label: '',
-          icon: Icons.message_outlined,
-          onPressed: () {
-            // TODO: Implement chat functionality
-          },
-        ),
-        onTap: () {
-          // TODO: Navigate to detailed profile
-        },
-      ),
-    );
-  }
-
+  /// Builds the filter UI.
   Widget _buildFilters() {
     return Container(
       padding: const EdgeInsets.all(16.0),

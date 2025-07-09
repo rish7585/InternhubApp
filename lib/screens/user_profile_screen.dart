@@ -5,6 +5,8 @@ import 'edit_profile_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/post_card.dart';
 
+/// User Profile Screen
+/// Shows the current user's profile and their posts. Allows editing profile and viewing followers.
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
 
@@ -24,6 +26,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     _loadProfile();
   }
 
+  /// Loads the current user's profile from Supabase.
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
     try {
@@ -65,8 +68,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.person), text: 'Profile'),
-              Tab(icon: Icon(Icons.article), text: 'My Posts'),
+              Tab(icon: Icon(Icons.person, semanticLabel: 'Profile Tab'), text: 'Profile'),
+              Tab(icon: Icon(Icons.article, semanticLabel: 'My Posts Tab'), text: 'My Posts'),
             ],
           ),
         ),
@@ -89,27 +92,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Center(
-                                    child: CircleAvatar(
-                                      radius: 48,
-                                      backgroundImage: _profile!['profile_picture_url'] != null
-                                          ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                          : null,
-                                      child: _profile!['profile_picture_url'] == null
-                                          ? const Icon(Icons.person, size: 48)
-                                          : null,
+                                    child: Semantics(
+                                      label: 'Profile picture',
+                                      image: true,
+                                      child: CircleAvatar(
+                                        radius: 48,
+                                        backgroundImage: _profile!['profile_picture_url'] != null
+                                            ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                            : null,
+                                        child: _profile!['profile_picture_url'] == null
+                                            ? const Icon(Icons.person, size: 48)
+                                            : null,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
-                                  Text(
-                                    '${_profile!['first_name']} ${_profile!['last_name']}',
-                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
+                                  Semantics(
+                                    label: 'Name',
+                                    child: Text(
+                                      '${_profile!['first_name']} ${_profile!['last_name']}',
+                                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    _profile!['email'] ?? '',
-                                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                                    textAlign: TextAlign.center,
+                                  Semantics(
+                                    label: 'Email',
+                                    child: Text(
+                                      _profile!['email'] ?? '',
+                                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                   const SizedBox(height: 16),
                                   Row(
@@ -117,7 +130,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     children: [
                                       const Icon(Icons.phone, size: 18, color: Colors.indigo),
                                       const SizedBox(width: 6),
-                                      Text(_profile!['phone'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      Semantics(
+                                        label: 'Phone',
+                                        child: Text(_profile!['phone'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
@@ -126,7 +142,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     children: [
                                       const Icon(Icons.business, size: 18, color: Colors.indigo),
                                       const SizedBox(width: 6),
-                                      Text(_profile!['company'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      Semantics(
+                                        label: 'Company',
+                                        child: Text(_profile!['company'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
@@ -135,7 +154,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     children: [
                                       const Icon(Icons.location_on, size: 18, color: Colors.indigo),
                                       const SizedBox(width: 6),
-                                      Text(_profile!['location'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      Semantics(
+                                        label: 'Location',
+                                        child: Text(_profile!['location'] ?? '', style: const TextStyle(fontSize: 15)),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 18),
@@ -144,13 +166,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.1),
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.white.withValues(alpha: 0.1)
+                                            : Colors.black.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(
-                                        _profile!['bio'] ?? '',
-                                        style: const TextStyle(fontSize: 16),
-                                        textAlign: TextAlign.center,
+                                      child: Semantics(
+                                        label: 'Bio',
+                                        child: Text(
+                                          _profile!['bio'] ?? '',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Theme.of(context).brightness == Brightness.dark 
+                                                ? Colors.white 
+                                                : Colors.black,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
                                   const SizedBox(height: 18),
@@ -199,11 +231,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                                   final f = followers[index];
                                                   return ListTile(
                                                     leading: f['profile_picture_url'] != null && f['profile_picture_url'].toString().isNotEmpty
-                                                        ? CircleAvatar(
-                                                            backgroundImage: NetworkImage('${f['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                                                        ? Semantics(
+                                                            label: 'Follower profile picture',
+                                                            image: true,
+                                                            child: CircleAvatar(
+                                                              backgroundImage: NetworkImage('${f['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                                                            ),
                                                           )
-                                                        : const CircleAvatar(child: Icon(Icons.person)),
-                                                    title: Text('${f['first_name'] ?? ''} ${f['last_name'] ?? ''}'),
+                                                        : Semantics(
+                                                            label: 'Follower profile icon',
+                                                            child: CircleAvatar(child: Icon(Icons.person)),
+                                                          ),
+                                                    title: Semantics(
+                                                      label: 'Follower name',
+                                                      child: Text('${f['first_name'] ?? ''} ${f['last_name'] ?? ''}'),
+                                                    ),
                                                   );
                                                 },
                                               );
@@ -227,6 +269,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
+  /// Builds the tab for displaying the user's posts.
   Widget _buildMyPostsTab() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _fetchMyPosts(),
@@ -254,6 +297,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
+  /// Fetches the current user's posts from Supabase.
   Future<List<Map<String, dynamic>>> _fetchMyPosts() async {
     final user = _authService.currentUser;
     if (user == null) return [];

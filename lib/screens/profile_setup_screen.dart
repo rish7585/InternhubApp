@@ -10,9 +10,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'main_screen.dart';
 
+/// Profile Setup Screen
+/// Guides new users through setting up their profile with personal and contact info.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({Key? key}) : super(key: key);
 
+  /// The main screen for profile setup after signup.
   @override
   _ProfileSetupScreenState createState() => _ProfileSetupScreenState();
 }
@@ -47,6 +50,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
+  /// Picks a profile image from the gallery and crops it.
   Future<void> _pickImage() async {
     try {
       final pickedFile = await _imagePicker.pickImage(
@@ -87,6 +91,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  /// Auto-fills the location field using device GPS.
   Future<void> _autoFillLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -121,6 +126,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  /// Handles profile setup form submission.
   Future<void> _handleProfileSetup() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -203,17 +209,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
                 const SizedBox(height: 32),
                 Center(
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey[200],
-                      backgroundImage: _profileImageBytes != null
-                          ? MemoryImage(_profileImageBytes!)
-                          : null,
-                      child: _profileImageBytes == null
-                          ? const Icon(Icons.add_a_photo, size: 40)
-                          : null,
+                  child: Tooltip(
+                    message: 'Add profile picture',
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Semantics(
+                        label: 'Profile picture',
+                        image: true,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: _profileImageBytes != null
+                              ? MemoryImage(_profileImageBytes!)
+                              : null,
+                          child: _profileImageBytes == null
+                              ? const Icon(Icons.add_a_photo, size: 40)
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -228,16 +241,42 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 const SizedBox(height: 24),
                 if (_errorMessage != null) ...[
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.red[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red[900],
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.red.shade900.withValues(alpha: 0.2) 
+                          : Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.red.shade400 
+                            : Colors.red.shade200,
+                        width: 1,
                       ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.red.shade300 
+                              : Colors.red.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.red.shade300 
+                                  : Colors.red.shade700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -248,8 +287,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   hint: 'Enter your first name',
                   prefixIcon: Icons.person_outline,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your first name';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'First name is required';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'First name must be at least 2 characters';
                     }
                     return null;
                   },
@@ -261,8 +303,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   hint: 'Enter your last name',
                   prefixIcon: Icons.person_outline,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your last name';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Last name is required';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'Last name must be at least 2 characters';
                     }
                     return null;
                   },
@@ -271,15 +316,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 AppTextField(
                   controller: _emailController,
                   label: 'Email',
-                  hint: 'Enter your email',
+                  hint: 'Enter your email address',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email address is required';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\$').hasMatch(value)) {
-                      return 'Please enter a valid email';
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                      return 'Please enter a valid email address';
                     }
                     return null;
                   },
@@ -292,8 +337,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Phone number is required';
+                    }
+                    if (value.trim().length < 10) {
+                      return 'Please enter a valid phone number';
                     }
                     return null;
                   },
@@ -305,8 +353,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   hint: 'Enter your company name',
                   prefixIcon: Icons.business_outlined,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your company name';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Company name is required';
                     }
                     return null;
                   },
@@ -315,11 +363,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 AppTextField(
                   controller: _locationController,
                   label: 'Location',
-                  hint: 'Enter your location',
+                  hint: 'Enter your city and state',
                   prefixIcon: Icons.location_on_outlined,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your location';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Location is required';
                     }
                     return null;
                   },
@@ -333,10 +381,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 32),
-                AppButton(
-                  label: 'Complete Profile',
-                  onPressed: _isLoading ? null : _handleProfileSetup,
-                  isLoading: _isLoading,
+                Tooltip(
+                  message: 'Complete your profile setup',
+                  child: AppButton(
+                    label: 'Complete Profile',
+                    onPressed: _isLoading ? null : _handleProfileSetup,
+                    isLoading: _isLoading,
+                  ),
                 ),
               ],
             ),

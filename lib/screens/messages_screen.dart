@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_screen.dart';
 
+/// Messages Screen
+/// Shows a list of users the current user has messaged with. Tapping opens a chat.
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({Key? key}) : super(key: key);
 
@@ -22,6 +24,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     fetchProfileAndConversations();
   }
 
+  /// Fetches the current user's profile and all conversations.
   Future<void> fetchProfileAndConversations() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
@@ -51,6 +54,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     await fetchConversations();
   }
 
+  /// Fetches all conversations for the current user.
   Future<void> fetchConversations() async {
     if (userId == null) return;
     final response = await Supabase.instance.client
@@ -82,6 +86,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     });
   }
 
+  /// Opens the chat screen with the selected user.
   Future<void> openChatWithUser(Map<String, dynamic> user) async {
     Navigator.push(
       context,
@@ -97,24 +102,167 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Center(child: CircularProgressIndicator());
-    if (conversationUsers.isEmpty) {
-      return const Center(child: Text('No conversations yet.'));
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Messages'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
-    return ListView.builder(
-      itemCount: conversationUsers.length,
-      itemBuilder: (context, index) {
-        final user = conversationUsers[index];
-        return ListTile(
-          leading: user['profile_picture_url'] != null && user['profile_picture_url'].toString().isNotEmpty
-              ? CircleAvatar(
-                  backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
-                )
-              : const CircleAvatar(child: Icon(Icons.person)),
-          title: Text('${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'),
-          onTap: () => openChatWithUser(user),
-        );
-      },
+    
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Messages'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.red.shade300 
+                      : Colors.red.shade600,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.red.shade300 
+                        : Colors.red.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white70 
+                        : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    if (conversationUsers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Messages'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline,
+                  size: 64,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade400 
+                      : Colors.grey.shade600,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No Conversations Yet',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Start a conversation by connecting with other users',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white70 
+                        : Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Messages'),
+      ),
+      body: ListView.builder(
+        itemCount: conversationUsers.length,
+        itemBuilder: (context, index) {
+          final user = conversationUsers[index];
+          final userName = '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
+          final displayName = userName.isNotEmpty ? userName : 'Unknown User';
+          
+          return Semantics(
+            label: 'Conversation with $displayName',
+            child: ListTile(
+              leading: Semantics(
+                label: 'Profile picture of $displayName',
+                image: true,
+                child: user['profile_picture_url'] != null && user['profile_picture_url'].toString().isNotEmpty
+                    ? CircleAvatar(
+                        backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                      )
+                    : CircleAvatar(
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.grey.shade700 
+                            : Colors.grey.shade300,
+                        child: Icon(
+                          Icons.person,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white 
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+              ),
+              title: Text(
+                displayName,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : Colors.black87,
+                ),
+              ),
+              subtitle: Text(
+                'Tap to open conversation',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white60 
+                      : Colors.black54,
+                ),
+              ),
+              onTap: () => openChatWithUser(user),
+            ),
+          );
+        },
+      ),
     );
   }
 } 

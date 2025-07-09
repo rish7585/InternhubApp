@@ -72,9 +72,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign Up'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Go back',
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: Center(
@@ -86,36 +94,58 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Create Account',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      'Create Account',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Sign up to get started',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: isDark ? Colors.white70 : Colors.grey,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
                   if (_errorMessage != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.red[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: Colors.red[900],
+                        color: isDark ? Colors.red.shade900.withValues(alpha: 0.2) : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? Colors.red.shade400 : Colors.red.shade200,
+                          width: 1,
                         ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: isDark ? Colors.red.shade300 : Colors.red.shade600,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -123,15 +153,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   AppTextField(
                     controller: _emailController,
                     label: 'Email',
-                    hint: 'Enter your email',
+                    hint: 'Enter your email address',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Email address is required';
                       }
-                      if (!EmailValidator.validate(value)) {
-                        return 'Please enter a valid email';
+                      if (!EmailValidator.validate(value.trim())) {
+                        return 'Please enter a valid email address';
                       }
                       return null;
                     },
@@ -140,13 +170,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   AppTextField(
                     controller: _passwordController,
                     label: 'Password',
-                    hint: 'Enter your password',
+                    hint: 'Create a strong password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
                       ),
+                      tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
                       onPressed: () {
                         setState(() {
                           _isPasswordVisible = !_isPasswordVisible;
@@ -155,10 +186,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'Password is required';
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return 'Password must be at least 6 characters long';
                       }
                       return null;
                     },
@@ -174,6 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       icon: Icon(
                         _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
                       ),
+                      tooltip: _isConfirmPasswordVisible ? 'Hide password' : 'Show password',
                       onPressed: () {
                         setState(() {
                           _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
@@ -200,7 +232,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Already have an account?'),
+                      Text(
+                        'Already have an account?',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacement(

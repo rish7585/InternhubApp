@@ -1,3 +1,5 @@
+/// Chat Screen
+/// Displays a chat conversation between the current user and another user.
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/app_button.dart';
@@ -5,6 +7,7 @@ import '../widgets/app_text_field.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../widgets/chat_bubble.dart';
 
+/// The main screen for chatting with another user.
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserName;
@@ -28,6 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
     fetchMessages();
   }
 
+  /// Fetches all messages between the current user and the other user.
   Future<void> fetchMessages() async {
     if (userId == null) return;
     final response = await Supabase.instance.client
@@ -41,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  /// Sends a new message to the other user.
   Future<void> sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty || userId == null) return;
@@ -54,6 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
     fetchMessages();
   }
 
+  /// Scrolls to the bottom of the chat list.
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -76,16 +82,28 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            if (widget.otherUserProfilePic != null && widget.otherUserProfilePic!.isNotEmpty)
-              CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage('${widget.otherUserProfilePic}?v=${DateTime.now().millisecondsSinceEpoch}'),
-              )
-            else
-              const CircleAvatar(
-                radius: 18,
-                child: Icon(Icons.person),
-              ),
+            Semantics(
+              label: 'Profile picture of ${widget.otherUserName}',
+              image: true,
+              child: widget.otherUserProfilePic != null && widget.otherUserProfilePic!.isNotEmpty
+                  ? CircleAvatar(
+                      radius: 18,
+                      backgroundImage: NetworkImage('${widget.otherUserProfilePic}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                    )
+                  : CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.grey.shade700 
+                          : Colors.grey.shade300,
+                      child: Icon(
+                        Icons.person,
+                        size: 18,
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white 
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -103,19 +121,60 @@ class _ChatScreenState extends State<ChatScreen> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : messages.isEmpty
-                    ? const Center(child: Text('No messages yet.', style: TextStyle(color: Colors.grey)))
-                    : ListView.builder(
-                        controller: _scrollController,
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = messages[index];
-                          final isMe = msg['sender_id'] == userId;
-                          return ChatBubble(
-                            content: msg['content'],
-                            timestamp: timeago.format(DateTime.parse(msg['created_at'])),
-                            isMe: isMe,
-                          );
-                        },
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline,
+                                size: 64,
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.grey.shade400 
+                                    : Colors.grey.shade600,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Messages Yet',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white 
+                                      : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Start the conversation by sending a message',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white70 
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : Semantics(
+                        label: 'Chat messages',
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final msg = messages[index];
+                            final isMe = msg['sender_id'] == userId;
+                            return ChatBubble(
+                              content: msg['content'],
+                              timestamp: timeago.format(DateTime.parse(msg['created_at'])),
+                              isMe: isMe,
+                            );
+                          },
+                        ),
                       ),
           ),
           Padding(
@@ -130,10 +189,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                AppButton(
-                  label: '',
-                  icon: Icons.send,
-                  onPressed: sendMessage,
+                Tooltip(
+                  message: 'Send message',
+                  child: AppButton(
+                    label: '',
+                    icon: Icons.send,
+                    onPressed: sendMessage,
+                  ),
                 ),
               ],
             ),

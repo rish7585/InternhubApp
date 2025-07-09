@@ -7,11 +7,9 @@
       "name": "intern_hub",
       "version": "1.0.0+1",
       "dependencies": [
-        "cupertino_icons",
         "email_validator",
         "flutter",
         "flutter_localizations",
-        "flutter_riverpod",
         "geocoding",
         "geolocator",
         "go_router",
@@ -156,20 +154,13 @@
       ]
     },
     {
-      "name": "flutter_riverpod",
-      "version": "2.6.1",
+      "name": "provider",
+      "version": "6.1.5",
       "dependencies": [
         "collection",
         "flutter",
-        "meta",
-        "riverpod",
-        "state_notifier"
+        "nested"
       ]
-    },
-    {
-      "name": "cupertino_icons",
-      "version": "1.0.8",
-      "dependencies": []
     },
     {
       "name": "supabase_flutter",
@@ -556,20 +547,10 @@
       ]
     },
     {
-      "name": "state_notifier",
+      "name": "nested",
       "version": "1.0.0",
       "dependencies": [
-        "meta"
-      ]
-    },
-    {
-      "name": "riverpod",
-      "version": "2.6.1",
-      "dependencies": [
-        "collection",
-        "meta",
-        "stack_trace",
-        "state_notifier"
+        "flutter"
       ]
     },
     {
@@ -1160,22 +1141,6 @@
       "version": "1.0.1",
       "dependencies": [
         "web"
-      ]
-    },
-    {
-      "name": "provider",
-      "version": "6.1.5",
-      "dependencies": [
-        "collection",
-        "flutter",
-        "nested"
-      ]
-    },
-    {
-      "name": "nested",
-      "version": "1.0.0",
-      "dependencies": [
-        "flutter"
       ]
     }
   ],

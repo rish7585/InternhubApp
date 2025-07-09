@@ -9,9 +9,12 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+/// Edit Profile Screen
+/// Allows users to edit their profile information and profile picture.
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
 
+  /// The main screen for editing user profile.
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
@@ -42,6 +45,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadProfile();
   }
 
+  /// Loads the current user's profile from Supabase.
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
     try {
@@ -65,6 +69,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  /// Picks a new profile image from the gallery and crops it.
   Future<void> _pickImage() async {
     try {
       final pickedFile = await _imagePicker.pickImage(
@@ -104,6 +109,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  /// Auto-fills the location field using device GPS.
   Future<void> _autoFillLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -138,6 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  /// Saves the updated profile to Supabase.
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -217,29 +224,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           Stack(
                             alignment: Alignment.bottomRight,
                             children: [
-                              CircleAvatar(
-                                radius: 48,
-                                backgroundImage: _profileImageBytes != null
-                                    ? MemoryImage(_profileImageBytes!)
-                                    : (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
-                                        ? NetworkImage('$_profilePictureUrl?v=${DateTime.now().millisecondsSinceEpoch}') as ImageProvider
-                                        : null,
-                                child: (_profileImageBytes == null && (_profilePictureUrl == null || _profilePictureUrl!.isEmpty))
-                                    ? const Icon(Icons.person, size: 48)
-                                    : null,
+                              Semantics(
+                                label: 'Profile picture',
+                                image: true,
+                                child: CircleAvatar(
+                                  radius: 48,
+                                  backgroundImage: _profileImageBytes != null
+                                      ? MemoryImage(_profileImageBytes!)
+                                      : (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
+                                          ? NetworkImage('$_profilePictureUrl?v=${DateTime.now().millisecondsSinceEpoch}') as ImageProvider
+                                          : null,
+                                  child: (_profileImageBytes == null && (_profilePictureUrl == null || _profilePictureUrl!.isEmpty))
+                                      ? const Icon(Icons.person, size: 48)
+                                      : null,
+                                ),
                               ),
                               Positioned(
                                 bottom: 0,
                                 right: 0,
-                                child: GestureDetector(
-                                  onTap: _pickImage,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.indigo,
-                                      borderRadius: BorderRadius.circular(20),
+                                child: Tooltip(
+                                  message: 'Change profile picture',
+                                  child: GestureDetector(
+                                    onTap: _pickImage,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      padding: const EdgeInsets.all(6),
+                                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                                     ),
-                                    padding: const EdgeInsets.all(6),
-                                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                                   ),
                                 ),
                               ),
@@ -255,7 +269,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           const SizedBox(height: 24),
                           if (_errorMessage != null) ...[
-                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.red.shade900.withValues(alpha: 0.2) 
+                                    : Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.red.shade400 
+                                      : Colors.red.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.red.shade300 
+                                        : Colors.red.shade600,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.red.shade300 
+                                            : Colors.red.shade700,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             const SizedBox(height: 12),
                           ],
                           Row(
@@ -322,16 +374,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: AppButton(
-                                  label: 'Save Changes',
-                                  onPressed: _isSaving ? null : _saveProfile,
-                                  isLoading: _isSaving,
+                                child: Tooltip(
+                                  message: 'Save your profile changes',
+                                  child: AppButton(
+                                    label: 'Save Changes',
+                                    onPressed: _isSaving ? null : _saveProfile,
+                                    isLoading: _isSaving,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              AppButton(
-                                label: 'Cancel',
-                                onPressed: _isSaving ? null : () => Navigator.pop(context),
+                              Tooltip(
+                                message: 'Cancel and go back',
+                                child: AppButton(
+                                  label: 'Cancel',
+                                  onPressed: _isSaving ? null : () => Navigator.pop(context),
+                                ),
                               ),
                             ],
                           ),

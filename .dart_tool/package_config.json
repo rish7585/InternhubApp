@@ -74,12 +74,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "cupertino_icons",
-      "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8",
-      "packageUri": "lib/",
-      "languageVersion": "3.1"
-    },
-    {
       "name": "dbus",
       "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/dbus-0.7.11",
       "packageUri": "lib/",
@@ -162,12 +156,6 @@
       "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.28",
       "packageUri": "lib/",
       "languageVersion": "3.6"
-    },
-    {
-      "name": "flutter_riverpod",
-      "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/flutter_riverpod-2.6.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
     },
     {
       "name": "flutter_test",
@@ -530,12 +518,6 @@
       "languageVersion": "3.0"
     },
     {
-      "name": "riverpod",
-      "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/riverpod-2.6.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.17"
-    },
-    {
       "name": "rxdart",
       "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/rxdart-0.28.0",
       "packageUri": "lib/",
@@ -606,12 +588,6 @@
       "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/stack_trace-1.12.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
-    },
-    {
-      "name": "state_notifier",
-      "rootUri": "file:///Users/rishvinjasti/.pub-cache/hosted/pub.dev/state_notifier-1.0.0",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
     },
     {
       "name": "storage_client",

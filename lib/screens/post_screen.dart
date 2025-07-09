@@ -7,6 +7,8 @@ import '../services/profile_service.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 
+/// Post Creation Screen
+/// Allows users to create and share a new post, optionally with an image.
 class PostScreen extends StatefulWidget {
   const PostScreen({super.key});
 
@@ -32,6 +34,7 @@ class _PostScreenState extends State<PostScreen> {
     _loadProfile();
   }
 
+  /// Loads the current user's profile for post attribution.
   Future<void> _loadProfile() async {
     final user = _authService.currentUser;
     if (user != null) {
@@ -42,6 +45,7 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  /// Submits the post to Supabase.
   Future<void> _submitPost() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -89,6 +93,7 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  /// Picks an image from the gallery for the post.
   Future<void> _pickImage() async {
     try {
       final pickedFile = await _imagePicker.pickImage(
@@ -136,14 +141,24 @@ class _PostScreenState extends State<PostScreen> {
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundImage: _profile != null && _profile!['profile_picture_url'] != null
-                              ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                              : null,
-                          child: _profile == null || _profile!['profile_picture_url'] == null
-                              ? const Icon(Icons.person, size: 24)
-                              : null,
+                        Semantics(
+                          label: 'Your profile picture',
+                          image: true,
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundImage: _profile != null && _profile!['profile_picture_url'] != null
+                                ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                : null,
+                            child: _profile == null || _profile!['profile_picture_url'] == null
+                                ? Icon(
+                                    Icons.person, 
+                                    size: 24,
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.grey.shade600,
+                                  )
+                                : null,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -158,7 +173,45 @@ class _PostScreenState extends State<PostScreen> {
                     ),
                     const SizedBox(height: 24),
                     if (_errorMessage != null) ...[
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.red.shade900.withValues(alpha: 0.2) 
+                              : Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.red.shade400 
+                                : Colors.red.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.red.shade300 
+                                  : Colors.red.shade600,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.red.shade300 
+                                      : Colors.red.shade700,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
                     ],
                     AppTextField(
@@ -169,35 +222,66 @@ class _PostScreenState extends State<PostScreen> {
                       validator: (v) => v == null || v.trim().isEmpty ? 'Post content required' : null,
                     ),
                     const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Tooltip(
+                          message: 'Add image to your post',
+                          child: IconButton(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.image),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add image to your post',
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.white70 
+                                : Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     if (_imageBytes != null)
                       Stack(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(_imageBytes!, height: 180, width: double.infinity, fit: BoxFit.cover),
+                          Semantics(
+                            label: 'Selected image for post',
+                            image: true,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(_imageBytes!, height: 180, width: double.infinity, fit: BoxFit.cover),
+                            ),
                           ),
                           Positioned(
                             top: 8,
                             right: 8,
-                            child: GestureDetector(
-                              onTap: () => setState(() => _imageBytes = null),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
+                            child: Tooltip(
+                              message: 'Remove image',
+                              child: GestureDetector(
+                                onTap: () => setState(() => _imageBytes = null),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 20),
                                 ),
-                                padding: const EdgeInsets.all(4),
-                                child: const Icon(Icons.close, color: Colors.white, size: 20),
                               ),
                             ),
                           ),
                         ],
                       ),
                     const SizedBox(height: 24),
-                    AppButton(
-                      label: 'Post',
-                      onPressed: _isLoading ? null : _submitPost,
-                      isLoading: _isLoading,
+                    Tooltip(
+                      message: 'Create and publish your post',
+                      child: AppButton(
+                        label: 'Post',
+                        onPressed: _isLoading ? null : _submitPost,
+                        isLoading: _isLoading,
+                      ),
                     ),
                   ],
                 ),

@@ -3,10 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/post_card.dart';
-import 'search_screen.dart';
-import 'post_screen.dart';
-import 'messages_screen.dart';
-import 'roommate_finder_screen.dart';
 import 'settings_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -23,18 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
-  String? _errorMessage;
-  String? _userName;
   String? _userProfilePicture;
-  int _selectedIndex = 0;
-
-  List<Widget> get _pages => [
-    _buildFeed(),
-    const SearchScreen(),
-    const PostScreen(),
-    const MessagesScreen(),
-    const RoommateFinderScreen(),
-  ];
 
   @override
   void initState() {
@@ -46,18 +31,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadUserInfo() async {
     final user = _authService.currentUser;
     if (user == null) {
-      _errorMessage = 'User not authenticated';
       setState(() {});
       return;
     }
     final profile = await _profileService.getProfile(user.id);
     if (profile == null) {
-      _errorMessage = 'Profile not found';
       setState(() {});
       return;
     }
     setState(() {
-      _userName = '${profile['first_name']} ${profile['last_name']}';
       _userProfilePicture = profile['profile_picture_url'];
     });
   }
@@ -86,14 +68,17 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        // _errorMessage = e.toString(); // This line was removed
       });
     }
   }
 
   Widget _buildFeed() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
-      color: Colors.grey.shade50,
+      color: isDark ? const Color(0xFF181A20) : Colors.grey.shade50,
       child: Stack(
         children: [
           _isLoading
@@ -109,32 +94,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: _posts.isEmpty
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.feed_outlined,
-                                size: 64,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No posts yet',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade600,
+                          child: Semantics(
+                            label: 'No posts available',
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.feed_outlined,
+                                  size: 64,
+                                  color: isDark ? Colors.white24 : Colors.grey.shade400,
+                                  semanticLabel: 'Empty feed icon',
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Be the first to share something!',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade500,
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No posts yet',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Be the first to share something!',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       : ListView.builder(
@@ -142,36 +131,40 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: _posts.length + 2,
                           itemBuilder: (context, index) {
                             if (index == 0) {
-                              return Container(
-                                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Feed',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.grey.shade900,
-                                        letterSpacing: -1,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2563EB),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        '${_posts.length} posts',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                              return Semantics(
+                                header: true,
+                                label: 'Feed header with post count',
+                                child: Container(
+                                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Feed',
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark ? Colors.white : Colors.grey.shade900,
+                                          letterSpacing: -1,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2563EB),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          '${_posts.length} posts',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
@@ -195,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.settings),
+          tooltip: 'Settings',
           onPressed: () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
           },
@@ -204,17 +198,24 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: _userProfilePicture != null
-                ? CircleAvatar(
-                    backgroundImage: NetworkImage('$_userProfilePicture?v=${DateTime.now().millisecondsSinceEpoch}'),
+                ? Semantics(
+                    label: 'User profile picture',
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage('$_userProfilePicture?v=${DateTime.now().millisecondsSinceEpoch}'),
+                    ),
                   )
-                : const Icon(Icons.person),
+                : Semantics(
+                    label: 'User profile icon',
+                    child: Icon(Icons.person),
+                  ),
+            tooltip: 'View profile',
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const UserProfileScreen()));
             },
           ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: _buildFeed(),
     );
   }
 } 

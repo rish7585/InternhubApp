@@ -3,6 +3,8 @@ import 'chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/app_button.dart';
 
+/// View Profile Screen
+/// Shows another user's profile, allows messaging and following.
 class ViewProfileScreen extends StatefulWidget {
   final Map<String, dynamic> profile;
   const ViewProfileScreen({Key? key, required this.profile}) : super(key: key);
@@ -24,6 +26,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     checkIfFollowing();
   }
 
+  /// Fetches the followers of the viewed user.
   Future<void> fetchFollowers() async {
     final response = await Supabase.instance.client
         .from('connections')
@@ -35,6 +38,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     });
   }
 
+  /// Checks if the current user is following the viewed user.
   Future<void> checkIfFollowing() async {
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     if (currentUserId == null || currentUserId == widget.profile['id']) return;
@@ -48,6 +52,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     });
   }
 
+  /// Follows the viewed user.
   Future<void> followUser() async {
     setState(() { isLoadingFollow = true; });
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
@@ -96,14 +101,24 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Center(
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundImage: profile['profile_picture_url'] != null
-                          ? NetworkImage('${profile['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                          : null,
-                      child: profile['profile_picture_url'] == null
-                          ? const Icon(Icons.person, size: 48)
-                          : null,
+                    child: Semantics(
+                      label: 'Profile picture of ${profile['first_name']} ${profile['last_name']}',
+                      image: true,
+                      child: CircleAvatar(
+                        radius: 48,
+                        backgroundImage: profile['profile_picture_url'] != null
+                            ? NetworkImage('${profile['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                            : null,
+                        child: profile['profile_picture_url'] == null
+                            ? Icon(
+                                Icons.person, 
+                                size: 48,
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.white 
+                                    : Colors.grey.shade600,
+                              )
+                            : null,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -153,7 +168,9 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white.withValues(alpha: 0.1) 
+                            : Colors.black.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -163,31 +180,37 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                       ),
                     ),
                   const SizedBox(height: 24),
-                  AppButton(
-                    label: 'Message',
-                    icon: Icons.message,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            otherUserId: profile['id'],
-                            otherUserName: '${profile['first_name']} ${profile['last_name']}',
-                            otherUserProfilePic: profile['profile_picture_url'],
+                  Tooltip(
+                    message: 'Send message to ${profile['first_name']}',
+                    child: AppButton(
+                      label: 'Message',
+                      icon: Icons.message,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              otherUserId: profile['id'],
+                              otherUserName: '${profile['first_name']} ${profile['last_name']}',
+                              otherUserProfilePic: profile['profile_picture_url'],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   if (!isCurrentUser)
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
-                      child: AppButton(
-                        label: isFollowing ? 'Following' : 'Follow',
-                        icon: isFollowing ? Icons.check : Icons.person_add,
-                        isLoading: isLoadingFollow,
-                        color: isFollowing ? Colors.grey : Colors.indigo,
-                        onPressed: isFollowing || isLoadingFollow ? null : followUser,
+                      child: Tooltip(
+                        message: isFollowing ? 'You are following ${profile['first_name']}' : 'Follow ${profile['first_name']}',
+                        child: AppButton(
+                          label: isFollowing ? 'Following' : 'Follow',
+                          icon: isFollowing ? Icons.check : Icons.person_add,
+                          isLoading: isLoadingFollow,
+                          color: isFollowing ? Colors.grey : Colors.indigo,
+                          onPressed: isFollowing || isLoadingFollow ? null : followUser,
+                        ),
                       ),
                     ),
                   const SizedBox(height: 32),

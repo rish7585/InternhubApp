@@ -1,9 +1,12 @@
+/// Create Roommate Profile Screen
+/// Multi-step form for users to create their roommate profile, including preferences and interests.
 import 'package:flutter/material.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'roommate_finder_screen.dart';
 
+/// The main screen for creating a roommate profile.
 class CreateRoommateProfileScreen extends StatefulWidget {
   const CreateRoommateProfileScreen({Key? key}) : super(key: key);
 
@@ -106,26 +109,44 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     );
   }
 
+  /// Builds the progress indicator for the multi-step form.
   Widget _buildProgressIndicator() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
-        children: List.generate(4, (index) {
-          return Expanded(
-            child: Container(
-              height: 4,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                color: index <= _currentPage ? Colors.indigo : Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+      child: Column(
+        children: [
+          Semantics(
+            label: 'Progress indicator: step ${_currentPage + 1} of 4',
+            child: Row(
+              children: List.generate(4, (index) {
+                return Expanded(
+                  child: Container(
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: index <= _currentPage ? Colors.indigo : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                );
+              }),
             ),
-          );
-        }),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Step ${_currentPage + 1} of 4',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  /// Step 1: Basic info form.
   Widget _buildBasicInfoPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -193,6 +214,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     );
   }
 
+  /// Step 2: Location and budget form.
   Widget _buildLocationAndBudgetPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -233,21 +255,27 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          Text(
-            '\$${_budget.toInt()}',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+          Semantics(
+            label: 'Monthly budget: ${_budget.toInt()} dollars',
+            child: Text(
+              '\$${_budget.toInt()}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+            ),
           ),
-          Slider(
-            value: _budget,
-            min: 500,
-            max: 5000,
-            divisions: 45,
-            label: '\$${_budget.toInt()}',
-            onChanged: (value) {
-              setState(() {
-                _budget = value;
-              });
-            },
+          Semantics(
+            label: 'Adjust monthly budget slider',
+            child: Slider(
+              value: _budget,
+              min: 500,
+              max: 5000,
+              divisions: 45,
+              label: '\$${_budget.toInt()}',
+              onChanged: (value) {
+                setState(() {
+                  _budget = value;
+                });
+              },
+            ),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -255,28 +283,32 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _leaseDuration,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+          Semantics(
+            label: 'Select lease duration',
+            child: DropdownButtonFormField<String>(
+              value: _leaseDuration,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+              items: _leaseDurations.map((duration) {
+                return DropdownMenuItem(
+                  value: duration,
+                  child: Text(duration),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _leaseDuration = value!;
+                });
+              },
             ),
-            items: _leaseDurations.map((duration) {
-              return DropdownMenuItem(
-                value: duration,
-                child: Text(duration),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _leaseDuration = value!;
-              });
-            },
           ),
         ],
       ),
     );
   }
 
+  /// Step 3: Roommate preferences form.
   Widget _buildPreferencesPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -299,20 +331,23 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
             runSpacing: 8,
             children: _preferenceOptions.map((preference) {
               final isSelected = _selectedPreferences.contains(preference);
-              return FilterChip(
-                label: Text(preference),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedPreferences.add(preference);
-                    } else {
-                      _selectedPreferences.remove(preference);
-                    }
-                  });
-                },
-                selectedColor: Colors.indigo[100],
-                checkmarkColor: Colors.indigo,
+              return Semantics(
+                label: '${isSelected ? 'Selected' : 'Not selected'}: $preference',
+                child: FilterChip(
+                  label: Text(preference),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedPreferences.add(preference);
+                      } else {
+                        _selectedPreferences.remove(preference);
+                      }
+                    });
+                  },
+                  selectedColor: Colors.indigo[100],
+                  checkmarkColor: Colors.indigo,
+                ),
               );
             }).toList(),
           ),
@@ -321,6 +356,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     );
   }
 
+  /// Step 4: Bio and interests form.
   Widget _buildBioAndInterestsPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -361,20 +397,23 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
             runSpacing: 8,
             children: _interestOptions.map((interest) {
               final isSelected = _selectedInterests.contains(interest);
-              return FilterChip(
-                label: Text(interest),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedInterests.add(interest);
-                    } else {
-                      _selectedInterests.remove(interest);
-                    }
-                  });
-                },
-                selectedColor: Colors.indigo[100],
-                checkmarkColor: Colors.indigo,
+              return Semantics(
+                label: '${isSelected ? 'Selected' : 'Not selected'}: $interest',
+                child: FilterChip(
+                  label: Text(interest),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedInterests.add(interest);
+                      } else {
+                        _selectedInterests.remove(interest);
+                      }
+                    });
+                  },
+                  selectedColor: Colors.indigo[100],
+                  checkmarkColor: Colors.indigo,
+                ),
               );
             }).toList(),
           ),
@@ -383,6 +422,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     );
   }
 
+  /// Navigation buttons for the multi-step form.
   Widget _buildNavigationButtons() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -390,30 +430,36 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
         children: [
           if (_currentPage > 0)
             Expanded(
-              child: AppButton(
-                label: 'Previous',
-                onPressed: () {
-                  _pageController.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
+              child: Semantics(
+                label: 'Previous button',
+                child: AppButton(
+                  label: 'Previous',
+                  onPressed: () {
+                    _pageController.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
               ),
             ),
           if (_currentPage > 0) const SizedBox(width: 16),
           Expanded(
-            child: AppButton(
-              label: _currentPage < 3 ? 'Next' : 'Create Profile',
-              onPressed: () {
-                if (_currentPage < 3) {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                } else {
-                  _submitProfile();
-                }
-              },
+            child: Semantics(
+              label: _currentPage < 3 ? 'Next button' : 'Create Profile button',
+              child: AppButton(
+                label: _currentPage < 3 ? 'Next' : 'Create Profile',
+                onPressed: () {
+                  if (_currentPage < 3) {
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  } else {
+                    _submitProfile();
+                  }
+                },
+              ),
             ),
           ),
         ],
@@ -421,6 +467,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     );
   }
 
+  /// Submits the roommate profile to Supabase.
   void _submitProfile() async {
     if (_formKey.currentState!.validate()) {
       final user = Supabase.instance.client.auth.currentUser;

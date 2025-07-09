@@ -12,6 +12,7 @@ class AppTextField extends StatelessWidget {
   final bool enabled;
   final VoidCallback? onTap;
   final Widget? suffixIcon;
+  final bool showSuccessState;
 
   const AppTextField({
     super.key,
@@ -26,10 +27,14 @@ class AppTextField extends StatelessWidget {
     this.enabled = true,
     this.onTap,
     this.suffixIcon,
+    this.showSuccessState = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,7 +44,7 @@ class AppTextField extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: isDark ? Colors.white70 : Colors.grey.shade700,
               letterSpacing: -0.3,
             ),
           ),
@@ -56,33 +61,45 @@ class AppTextField extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Colors.grey.shade900,
+            color: isDark ? Colors.white : Colors.grey.shade900,
             letterSpacing: -0.3,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Colors.grey.shade400,
+              color: isDark ? Colors.white54 : Colors.grey.shade400,
               fontSize: 16,
               fontWeight: FontWeight.w400,
             ),
             prefixIcon: prefixIcon != null
                 ? Icon(
                     prefixIcon,
-                    color: Colors.grey.shade500,
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
                     size: 20,
                   )
                 : null,
-            suffixIcon: suffixIcon,
+            suffixIcon: suffixIcon ?? (showSuccessState 
+                ? Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade500,
+                    size: 20,
+                  )
+                : null),
             filled: true,
-            fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
+            fillColor: enabled 
+                ? (isDark ? const Color(0xFF23262F) : Colors.grey.shade50)
+                : (isDark ? Colors.grey.shade800 : Colors.grey.shade100),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: showSuccessState 
+                    ? Colors.green.shade400 
+                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
