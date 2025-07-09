@@ -95,14 +95,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     child: Semantics(
                                       label: 'Profile picture',
                                       image: true,
-                                      child: CircleAvatar(
-                                        radius: 48,
-                                        backgroundImage: _profile!['profile_picture_url'] != null
-                                            ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                            : null,
-                                        child: _profile!['profile_picture_url'] == null
-                                            ? const Icon(Icons.person, size: 48)
-                                            : null,
+                                    child: CircleAvatar(
+                                      radius: 48,
+                                      backgroundImage: _profile!['profile_picture_url'] != null
+                                          ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                          : null,
+                                      child: _profile!['profile_picture_url'] == null
+                                          ? const Icon(Icons.person, size: 48)
+                                          : null,
                                       ),
                                     ),
                                   ),
@@ -110,18 +110,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   Semantics(
                                     label: 'Name',
                                     child: Text(
-                                      '${_profile!['first_name']} ${_profile!['last_name']}',
-                                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.center,
+                                    '${_profile!['first_name']} ${_profile!['last_name']}',
+                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.center,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
                                   Semantics(
                                     label: 'Email',
                                     child: Text(
-                                      _profile!['email'] ?? '',
-                                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                                      textAlign: TextAlign.center,
+                                    _profile!['email'] ?? '',
+                                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                    textAlign: TextAlign.center,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
@@ -173,15 +173,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       ),
                                       child: Semantics(
                                         label: 'Bio',
-                                        child: Text(
-                                          _profile!['bio'] ?? '',
+                                      child: Text(
+                                        _profile!['bio'] ?? '',
                                           style: TextStyle(
                                             fontSize: 16,
                                             color: Theme.of(context).brightness == Brightness.dark 
                                                 ? Colors.white 
                                                 : Colors.black,
                                           ),
-                                          textAlign: TextAlign.center,
+                                        textAlign: TextAlign.center,
                                         ),
                                       ),
                                     ),
@@ -235,7 +235,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                                             label: 'Follower profile picture',
                                                             image: true,
                                                             child: CircleAvatar(
-                                                              backgroundImage: NetworkImage('${f['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                                                            backgroundImage: NetworkImage('${f['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
                                                             ),
                                                           )
                                                         : Semantics(

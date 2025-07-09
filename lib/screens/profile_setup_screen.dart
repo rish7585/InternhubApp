@@ -79,9 +79,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         );
         if (croppedFile != null) {
           final bytes = await croppedFile.readAsBytes();
-          setState(() {
-            _profileImageBytes = bytes;
-          });
+        setState(() {
+          _profileImageBytes = bytes;
+        });
         }
       }
     } catch (error) {
@@ -211,21 +211,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 Center(
                   child: Tooltip(
                     message: 'Add profile picture',
-                    child: GestureDetector(
-                      onTap: _pickImage,
+                  child: GestureDetector(
+                    onTap: _pickImage,
                       child: Semantics(
                         label: 'Profile picture',
                         image: true,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: _profileImageBytes != null
-                              ? MemoryImage(_profileImageBytes!)
-                              : null,
-                          child: _profileImageBytes == null
-                              ? const Icon(Icons.add_a_photo, size: 40)
-                              : null,
-                        ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: _profileImageBytes != null
+                          ? MemoryImage(_profileImageBytes!)
+                          : null,
+                      child: _profileImageBytes == null
+                          ? const Icon(Icons.add_a_photo, size: 40)
+                          : null,
+                    ),
                       ),
                     ),
                   ),
@@ -265,9 +265,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
                               color: Theme.of(context).brightness == Brightness.dark 
                                   ? Colors.red.shade300 
                                   : Colors.red.shade700,
@@ -275,7 +275,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
+                      ),
                       ],
                     ),
                   ),
@@ -385,9 +385,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   message: 'Complete your profile setup',
                   child: AppButton(
                     label: 'Complete Profile',
-                    onPressed: _isLoading ? null : _handleProfileSetup,
+                  onPressed: _isLoading ? null : _handleProfileSetup,
                     isLoading: _isLoading,
-                  ),
+                        ),
                 ),
               ],
             ),

@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _authService = AuthService();
   final _profileService = ProfileService();
-  
+
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
   String? _userProfilePicture;
@@ -80,15 +80,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       color: isDark ? const Color(0xFF181A20) : Colors.grey.shade50,
       child: Stack(
-        children: [
-          _isLoading
+      children: [
+        _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: () async {
+            : RefreshIndicator(
+                onRefresh: () async {
                     await _loadUserInfo();
                     await _loadPosts();
                   },
@@ -96,15 +96,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? Center(
                           child: Semantics(
                             label: 'No posts available',
-                            child: Column(
+                                    child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                                      children: [
                                 Icon(
                                   Icons.feed_outlined,
                                   size: 64,
                                   color: isDark ? Colors.white24 : Colors.grey.shade400,
                                   semanticLabel: 'Empty feed icon',
-                                ),
+                                              ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'No posts yet',
@@ -113,23 +113,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: isDark ? Colors.white70 : Colors.grey.shade600,
                                   ),
-                                ),
+                                              ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Be the first to share something!',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                                                ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           itemCount: _posts.length + 2,
-                          itemBuilder: (context, index) {
+                              itemBuilder: (context, index) {
                             if (index == 0) {
                               return Semantics(
                                 header: true,
@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         decoration: BoxDecoration(
                                           color: const Color(0xFF2563EB),
                                           borderRadius: BorderRadius.circular(20),
-                                        ),
+                                          ),
                                         child: Text(
                                           '${_posts.length} posts',
                                           style: const TextStyle(
@@ -174,11 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             final post = _posts[index - 1];
                             final profile = post['profiles'] ?? {};
                             return PostCard(post: post, profile: profile);
-                          },
-                        ),
+                              },
+                            ),
+                          ),
+                  ],
                 ),
-        ],
-      ),
     );
   }
 

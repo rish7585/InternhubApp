@@ -145,11 +145,11 @@ class _PostScreenState extends State<PostScreen> {
                           label: 'Your profile picture',
                           image: true,
                           child: CircleAvatar(
-                            radius: 24,
-                            backgroundImage: _profile != null && _profile!['profile_picture_url'] != null
-                                ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                : null,
-                            child: _profile == null || _profile!['profile_picture_url'] == null
+                          radius: 24,
+                          backgroundImage: _profile != null && _profile!['profile_picture_url'] != null
+                              ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                              : null,
+                          child: _profile == null || _profile!['profile_picture_url'] == null
                                 ? Icon(
                                     Icons.person, 
                                     size: 24,
@@ -157,7 +157,7 @@ class _PostScreenState extends State<PostScreen> {
                                         ? Colors.white 
                                         : Colors.grey.shade600,
                                   )
-                                : null,
+                              : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -250,8 +250,8 @@ class _PostScreenState extends State<PostScreen> {
                             label: 'Selected image for post',
                             image: true,
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.memory(_imageBytes!, height: 180, width: double.infinity, fit: BoxFit.cover),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(_imageBytes!, height: 180, width: double.infinity, fit: BoxFit.cover),
                             ),
                           ),
                           Positioned(
@@ -259,15 +259,15 @@ class _PostScreenState extends State<PostScreen> {
                             right: 8,
                             child: Tooltip(
                               message: 'Remove image',
-                              child: GestureDetector(
-                                onTap: () => setState(() => _imageBytes = null),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.black54,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  padding: const EdgeInsets.all(4),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                            child: GestureDetector(
+                              onTap: () => setState(() => _imageBytes = null),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: const Icon(Icons.close, color: Colors.white, size: 20),
                                 ),
                               ),
                             ),
@@ -279,7 +279,7 @@ class _PostScreenState extends State<PostScreen> {
                       message: 'Create and publish your post',
                       child: AppButton(
                         label: 'Post',
-                        onPressed: _isLoading ? null : _submitPost,
+                      onPressed: _isLoading ? null : _submitPost,
                         isLoading: _isLoading,
                       ),
                     ),

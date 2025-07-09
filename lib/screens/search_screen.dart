@@ -73,7 +73,7 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0,
       ),
       body: Column(
-        children: [
+          children: [
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -89,10 +89,10 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Semantics(
               label: 'Search for interns by name, company, or location',
               child: TextField(
-                controller: _searchController,
+              controller: _searchController,
                 style: TextStyle(color: theme.colorScheme.onSurface),
-                decoration: InputDecoration(
-                  hintText: 'Search by name, company, or location',
+              decoration: InputDecoration(
+                hintText: 'Search by name, company, or location',
                   hintStyle: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey.shade400,
                     fontSize: 16,
@@ -115,11 +115,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
                   ),
-                  filled: true,
+                filled: true,
                   fillColor: theme.cardColor,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
               ),
+            ),
             ),
           ),
           Expanded(
@@ -154,7 +154,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark ? Colors.white54 : Colors.grey.shade500,
-                              ),
+              ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -193,10 +193,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         : _results.isNotEmpty
                             ? ListView.separated(
                                 padding: const EdgeInsets.all(20),
-                                itemCount: _results.length,
+                  itemCount: _results.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final user = _results[index];
+                  itemBuilder: (context, index) {
+                    final user = _results[index];
                                   return Container(
                                     decoration: BoxDecoration(
                                       color: theme.cardColor,
@@ -212,34 +212,34 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     child: Semantics(
                                       label: 'Search result for ${user['first_name']} ${user['last_name']}',
-                                      child: ListTile(
+                      child: ListTile(
                                         contentPadding: const EdgeInsets.all(16),
                                         leading: Semantics(
                                           label: 'Profile picture of ${user['first_name']} ${user['last_name']}',
                                           image: true,
                                           child: CircleAvatar(
                                             radius: 24,
-                                            backgroundImage: user['profile_picture_url'] != null
-                                                ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                                : null,
+                          backgroundImage: user['profile_picture_url'] != null
+                              ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                              : null,
                                             backgroundColor: isDark ? Colors.grey[800] : Colors.grey.shade200,
-                                            child: user['profile_picture_url'] == null
+                          child: user['profile_picture_url'] == null
                                                 ? Icon(Icons.person, size: 24, color: isDark ? Colors.white : Colors.grey.shade600)
-                                                : null,
+                              : null,
                                           ),
-                                        ),
-                                        title: Text(
-                                          '${user['first_name']} ${user['last_name']}',
+                        ),
+                        title: Text(
+                          '${user['first_name']} ${user['last_name']}',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 16,
                                             color: theme.colorScheme.onSurface,
                                             letterSpacing: -0.3,
                                           ),
-                                        ),
+                        ),
                                         subtitle: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
+                          children: [
                                             if (user['company'] != null && user['company'].toString().isNotEmpty)
                                               Text(
                                                 user['company'],
@@ -268,21 +268,21 @@ class _SearchScreenState extends State<SearchScreen> {
                                             label: 'View profile',
                                             child: IconButton(
                                               icon: const Icon(Icons.person, color: Colors.white, size: 20),
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => ViewProfileScreen(profile: user),
-                                                  ),
-                                                );
-                                              },
-                                            ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ViewProfileScreen(profile: user),
+                                  ),
+                                );
+                              },
+                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                        ),
+                      ),
+                    );
+                  },
                               )
                             : Center(
                                 child: Column(
@@ -313,9 +313,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ],
                                 ),
-                              ),
-          ),
-        ],
+                ),
+              ),
+          ],
       ),
     );
   }

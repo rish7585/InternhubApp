@@ -97,10 +97,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Semantics(
                     header: true,
                     child: Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                       textAlign: TextAlign.center,
@@ -136,15 +136,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
                                 color: isDark ? Colors.red.shade300 : Colors.red.shade700,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
+                        ),
                         ],
                       ),
                     ),
@@ -173,16 +173,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     hint: 'Create a strong password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
-                    suffixIcon: IconButton(
-                      icon: Icon(
+                      suffixIcon: IconButton(
+                        icon: Icon(
                         _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      ),
+                        ),
                       tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -201,16 +201,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     hint: 'Confirm your password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !_isConfirmPasswordVisible,
-                    suffixIcon: IconButton(
-                      icon: Icon(
+                      suffixIcon: IconButton(
+                        icon: Icon(
                         _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      ),
+                        ),
                       tooltip: _isConfirmPasswordVisible ? 'Hide password' : 'Show password',
-                      onPressed: () {
-                        setState(() {
-                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                        });
-                      },
+                        onPressed: () {
+                          setState(() {
+                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          });
+                        },
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {

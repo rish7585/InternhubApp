@@ -117,19 +117,19 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
         children: [
           Semantics(
             label: 'Progress indicator: step ${_currentPage + 1} of 4',
-            child: Row(
-              children: List.generate(4, (index) {
-                return Expanded(
-                  child: Container(
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: index <= _currentPage ? Colors.indigo : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                );
-              }),
+      child: Row(
+        children: List.generate(4, (index) {
+          return Expanded(
+            child: Container(
+              height: 4,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: index <= _currentPage ? Colors.indigo : Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          );
+        }),
             ),
           ),
           const SizedBox(height: 8),
@@ -258,23 +258,23 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
           Semantics(
             label: 'Monthly budget: ${_budget.toInt()} dollars',
             child: Text(
-              '\$${_budget.toInt()}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+            '\$${_budget.toInt()}',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
             ),
           ),
           Semantics(
             label: 'Adjust monthly budget slider',
             child: Slider(
-              value: _budget,
-              min: 500,
-              max: 5000,
-              divisions: 45,
-              label: '\$${_budget.toInt()}',
-              onChanged: (value) {
-                setState(() {
-                  _budget = value;
-                });
-              },
+            value: _budget,
+            min: 500,
+            max: 5000,
+            divisions: 45,
+            label: '\$${_budget.toInt()}',
+            onChanged: (value) {
+              setState(() {
+                _budget = value;
+              });
+            },
             ),
           ),
           const SizedBox(height: 24),
@@ -286,21 +286,21 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
           Semantics(
             label: 'Select lease duration',
             child: DropdownButtonFormField<String>(
-              value: _leaseDuration,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              items: _leaseDurations.map((duration) {
-                return DropdownMenuItem(
-                  value: duration,
-                  child: Text(duration),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _leaseDuration = value!;
-                });
-              },
+            value: _leaseDuration,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+            items: _leaseDurations.map((duration) {
+              return DropdownMenuItem(
+                value: duration,
+                child: Text(duration),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _leaseDuration = value!;
+              });
+            },
             ),
           ),
         ],
@@ -334,19 +334,19 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
               return Semantics(
                 label: '${isSelected ? 'Selected' : 'Not selected'}: $preference',
                 child: FilterChip(
-                  label: Text(preference),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _selectedPreferences.add(preference);
-                      } else {
-                        _selectedPreferences.remove(preference);
-                      }
-                    });
-                  },
-                  selectedColor: Colors.indigo[100],
-                  checkmarkColor: Colors.indigo,
+                label: Text(preference),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedPreferences.add(preference);
+                    } else {
+                      _selectedPreferences.remove(preference);
+                    }
+                  });
+                },
+                selectedColor: Colors.indigo[100],
+                checkmarkColor: Colors.indigo,
                 ),
               );
             }).toList(),
@@ -400,19 +400,19 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
               return Semantics(
                 label: '${isSelected ? 'Selected' : 'Not selected'}: $interest',
                 child: FilterChip(
-                  label: Text(interest),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _selectedInterests.add(interest);
-                      } else {
-                        _selectedInterests.remove(interest);
-                      }
-                    });
-                  },
-                  selectedColor: Colors.indigo[100],
-                  checkmarkColor: Colors.indigo,
+                label: Text(interest),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedInterests.add(interest);
+                    } else {
+                      _selectedInterests.remove(interest);
+                    }
+                  });
+                },
+                selectedColor: Colors.indigo[100],
+                checkmarkColor: Colors.indigo,
                 ),
               );
             }).toList(),
@@ -434,12 +434,12 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
                 label: 'Previous button',
                 child: AppButton(
                   label: 'Previous',
-                  onPressed: () {
-                    _pageController.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
+                onPressed: () {
+                  _pageController.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
                 ),
               ),
             ),
@@ -449,16 +449,16 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
               label: _currentPage < 3 ? 'Next button' : 'Create Profile button',
               child: AppButton(
                 label: _currentPage < 3 ? 'Next' : 'Create Profile',
-                onPressed: () {
-                  if (_currentPage < 3) {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  } else {
-                    _submitProfile();
-                  }
-                },
+              onPressed: () {
+                if (_currentPage < 3) {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                } else {
+                  _submitProfile();
+                }
+              },
               ),
             ),
           ),
@@ -495,12 +495,12 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Roommate profile created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Roommate profile created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const RoommateFinderScreen()),
@@ -510,7 +510,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to create profile: $e'), backgroundColor: Colors.red),
-        );
+      );
       }
     }
   }

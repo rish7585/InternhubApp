@@ -104,12 +104,12 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                     child: Semantics(
                       label: 'Profile picture of ${profile['first_name']} ${profile['last_name']}',
                       image: true,
-                      child: CircleAvatar(
-                        radius: 48,
-                        backgroundImage: profile['profile_picture_url'] != null
-                            ? NetworkImage('${profile['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                            : null,
-                        child: profile['profile_picture_url'] == null
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundImage: profile['profile_picture_url'] != null
+                          ? NetworkImage('${profile['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                          : null,
+                      child: profile['profile_picture_url'] == null
                             ? Icon(
                                 Icons.person, 
                                 size: 48,
@@ -117,7 +117,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                                     ? Colors.white 
                                     : Colors.grey.shade600,
                               )
-                            : null,
+                          : null,
                       ),
                     ),
                   ),
@@ -185,18 +185,18 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                     child: AppButton(
                       label: 'Message',
                       icon: Icons.message,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              otherUserId: profile['id'],
-                              otherUserName: '${profile['first_name']} ${profile['last_name']}',
-                              otherUserProfilePic: profile['profile_picture_url'],
-                            ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            otherUserId: profile['id'],
+                            otherUserName: '${profile['first_name']} ${profile['last_name']}',
+                            otherUserProfilePic: profile['profile_picture_url'],
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
                     ),
                   ),
                   if (!isCurrentUser)
@@ -209,7 +209,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                           icon: isFollowing ? Icons.check : Icons.person_add,
                           isLoading: isLoadingFollow,
                           color: isFollowing ? Colors.grey : Colors.indigo,
-                          onPressed: isFollowing || isLoadingFollow ? null : followUser,
+                        onPressed: isFollowing || isLoadingFollow ? null : followUser,
                         ),
                       ),
                     ),

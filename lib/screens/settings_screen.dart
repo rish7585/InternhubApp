@@ -341,8 +341,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Column(
-              children: [
+        child: Column(
+          children: [
                 ListTile(
                   leading: const Icon(Icons.brightness_6),
                   title: const Text('Theme'),
@@ -367,7 +367,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                       }
                     },
-                  ),
+            ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 72, bottom: 8),
@@ -446,9 +446,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: const Icon(Icons.privacy_tip),
                   title: const Text('Privacy Policy'),
                   onTap: _showPrivacy,
-                ),
-              ],
             ),
+          ],
+        ),
           ),
         ],
       ),

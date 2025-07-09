@@ -31,22 +31,22 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<ThemeNotifier, LocaleNotifier>(
       builder: (context, themeNotifier, localeNotifier, _) {
-        return MaterialApp(
+    return MaterialApp(
           title: 'InternHub',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
+      theme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
+        colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF2563EB),
-              brightness: Brightness.light,
-            ),
+          brightness: Brightness.light,
+        ),
             fontFamily: 'Inter',
-            appBarTheme: const AppBarTheme(
+        appBarTheme: const AppBarTheme(
               elevation: 0,
               centerTitle: true,
-              backgroundColor: Colors.white,
+          backgroundColor: Colors.white,
               foregroundColor: Color(0xFF1F2937),
-              titleTextStyle: TextStyle(
+          titleTextStyle: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1F2937),
@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(color: Colors.grey.shade200, width: 1),
-              ),
+          ),
               color: Colors.white,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
@@ -76,22 +76,22 @@ class MyApp extends StatelessWidget {
                   letterSpacing: -0.3,
                 ),
               ),
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
               fillColor: Colors.grey.shade50,
-              border: OutlineInputBorder(
+          border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
+          ),
+          enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
+          ),
+          focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-              ),
+          ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               labelStyle: TextStyle(
                 color: Colors.grey.shade600,
@@ -150,24 +150,24 @@ class MyApp extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(color: Colors.grey.shade800, width: 1),
-              ),
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
-                foregroundColor: Colors.white,
+            foregroundColor: Colors.white,
                 textStyle: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.3,
                 ),
-                shape: RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                ),
+            ),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
+          ),
+        ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
               fillColor: const Color(0xFF23262F),
@@ -189,8 +189,8 @@ class MyApp extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-            ),
-            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               type: BottomNavigationBarType.fixed,
               backgroundColor: Color(0xFF23262F),
               selectedItemColor: Color(0xFF2563EB),
@@ -203,12 +203,12 @@ class MyApp extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
-              elevation: 8,
+          elevation: 8,
             ),
             snackBarTheme: const SnackBarThemeData(
               backgroundColor: Color(0xFF23262F),
               contentTextStyle: TextStyle(color: Colors.white),
-            ),
+      ),
             dialogBackgroundColor: const Color(0xFF23262F),
           ),
           themeMode: themeNotifier.themeMode,

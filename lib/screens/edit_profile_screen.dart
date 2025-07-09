@@ -97,9 +97,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
         if (croppedFile != null) {
           final bytes = await croppedFile.readAsBytes();
-          setState(() {
-            _profileImageBytes = bytes;
-          });
+        setState(() {
+          _profileImageBytes = bytes;
+        });
         }
       }
     } catch (error) {
@@ -228,15 +228,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 label: 'Profile picture',
                                 image: true,
                                 child: CircleAvatar(
-                                  radius: 48,
-                                  backgroundImage: _profileImageBytes != null
-                                      ? MemoryImage(_profileImageBytes!)
-                                      : (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
-                                          ? NetworkImage('$_profilePictureUrl?v=${DateTime.now().millisecondsSinceEpoch}') as ImageProvider
-                                          : null,
-                                  child: (_profileImageBytes == null && (_profilePictureUrl == null || _profilePictureUrl!.isEmpty))
-                                      ? const Icon(Icons.person, size: 48)
-                                      : null,
+                                radius: 48,
+                                backgroundImage: _profileImageBytes != null
+                                    ? MemoryImage(_profileImageBytes!)
+                                    : (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
+                                        ? NetworkImage('$_profilePictureUrl?v=${DateTime.now().millisecondsSinceEpoch}') as ImageProvider
+                                        : null,
+                                child: (_profileImageBytes == null && (_profilePictureUrl == null || _profilePictureUrl!.isEmpty))
+                                    ? const Icon(Icons.person, size: 48)
+                                    : null,
                                 ),
                               ),
                               Positioned(
@@ -244,15 +244,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 right: 0,
                                 child: Tooltip(
                                   message: 'Change profile picture',
-                                  child: GestureDetector(
-                                    onTap: _pickImage,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.all(6),
-                                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                                child: GestureDetector(
+                                  onTap: _pickImage,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.indigo,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.all(6),
+                                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                                     ),
                                   ),
                                 ),
@@ -378,7 +378,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   message: 'Save your profile changes',
                                   child: AppButton(
                                     label: 'Save Changes',
-                                    onPressed: _isSaving ? null : _saveProfile,
+                                  onPressed: _isSaving ? null : _saveProfile,
                                     isLoading: _isSaving,
                                   ),
                                 ),

@@ -212,9 +212,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
         title: const Text('Messages'),
       ),
       body: ListView.builder(
-        itemCount: conversationUsers.length,
-        itemBuilder: (context, index) {
-          final user = conversationUsers[index];
+      itemCount: conversationUsers.length,
+      itemBuilder: (context, index) {
+        final user = conversationUsers[index];
           final userName = '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
           final displayName = userName.isNotEmpty ? userName : 'Unknown User';
           
@@ -225,9 +225,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 label: 'Profile picture of $displayName',
                 image: true,
                 child: user['profile_picture_url'] != null && user['profile_picture_url'].toString().isNotEmpty
-                    ? CircleAvatar(
-                        backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
-                      )
+              ? CircleAvatar(
+                  backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                )
                     : CircleAvatar(
                         backgroundColor: Theme.of(context).brightness == Brightness.dark 
                             ? Colors.grey.shade700 
@@ -258,10 +258,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       : Colors.black54,
                 ),
               ),
-              onTap: () => openChatWithUser(user),
+          onTap: () => openChatWithUser(user),
             ),
-          );
-        },
+        );
+      },
       ),
     );
   }

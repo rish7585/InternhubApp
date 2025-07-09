@@ -126,10 +126,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Semantics(
                     header: true,
                     child: Text(
-                      'Welcome Back!',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                    'Welcome Back!',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                       textAlign: TextAlign.center,
@@ -165,15 +165,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
                                 color: isDark ? Colors.red.shade300 : Colors.red.shade700,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
+                        ),
                         ],
                       ),
                     ),
@@ -202,16 +202,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: 'Enter your password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
-                    suffixIcon: IconButton(
-                      icon: Icon(
+                      suffixIcon: IconButton(
+                        icon: Icon(
                         _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      ),
+                        ),
                       tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {

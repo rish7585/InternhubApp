@@ -85,32 +85,32 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
                   child: AppTextField(
-                    controller: _searchController,
+              controller: _searchController,
                     label: 'Search roommates...',
                     hint: 'Search roommates...',
                     prefixIcon: Icons.search,
-                  ),
-                ),
-                if (_showFilters) _buildFilters(),
+            ),
+          ),
+          if (_showFilters) _buildFilters(),
                 if (_myProfile != null) _buildMyProfileCard(_myProfile!),
                 const SizedBox(height: 8),
-                Expanded(
+          Expanded(
                   child: _roommatePosts.isEmpty
                       ? const Center(child: Text('No roommate posts yet.'))
                       : ListView.builder(
                           itemCount: _roommatePosts.length,
-                          itemBuilder: (context, index) {
+              itemBuilder: (context, index) {
                             final post = _roommatePosts[index];
                             return _buildRoommateCard(post);
-                          },
-                        ),
-                ),
-              ],
+              },
             ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to create roommate profile screen for posting ads
@@ -313,9 +313,14 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
 
   /// Builds the filter UI.
   Widget _buildFilters() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      color: Colors.grey[100],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      color: isDark ? const Color(0xFF23262F) : Colors.white,
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -329,10 +334,21 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _selectedLocation,
-            decoration: const InputDecoration(
+              decoration: InputDecoration(
               labelText: 'Location',
-              border: OutlineInputBorder(),
+                filled: true,
+                fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white24 : Colors.black26,
+                  ),
+                ),
             ),
+              dropdownColor: isDark ? Colors.grey[900] : Colors.white,
             items: ['Any', 'San Francisco', 'New York', 'Seattle', 'Austin']
                 .map((location) => DropdownMenuItem(
                       value: location,
@@ -349,22 +365,35 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Max Budget:  24${_maxBudget.toInt()}'),
-              Slider(
+                Text('Max Budget:  24 24${_maxBudget.toInt()}',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: isDark ? Colors.indigoAccent : Colors.indigo,
+                    inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+                    thumbColor: isDark ? Colors.indigoAccent : Colors.indigo,
+                    overlayColor: (isDark ? Colors.indigoAccent : Colors.indigo).withAlpha(32),
+                  ),
+                  child: Slider(
                 value: _maxBudget,
                 min: 500,
                 max: 5000,
                 divisions: 45,
-                label: ' 24${_maxBudget.toInt()}',
+                    label: ' 24 24${_maxBudget.toInt()}',
                 onChanged: (value) {
                   setState(() {
                     _maxBudget = value;
                   });
                 },
               ),
-            ],
-          ),
-        ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

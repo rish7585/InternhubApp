@@ -87,11 +87,11 @@ class _ChatScreenState extends State<ChatScreen> {
               image: true,
               child: widget.otherUserProfilePic != null && widget.otherUserProfilePic!.isNotEmpty
                   ? CircleAvatar(
-                      radius: 18,
-                      backgroundImage: NetworkImage('${widget.otherUserProfilePic}?v=${DateTime.now().millisecondsSinceEpoch}'),
-                    )
+                radius: 18,
+                backgroundImage: NetworkImage('${widget.otherUserProfilePic}?v=${DateTime.now().millisecondsSinceEpoch}'),
+              )
                   : CircleAvatar(
-                      radius: 18,
+                radius: 18,
                       backgroundColor: Theme.of(context).brightness == Brightness.dark 
                           ? Colors.grey.shade700 
                           : Colors.grey.shade300,
@@ -103,7 +103,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             : Colors.grey.shade600,
                       ),
                     ),
-            ),
+              ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -172,10 +172,10 @@ class _ChatScreenState extends State<ChatScreen> {
                               content: msg['content'],
                               timestamp: timeago.format(DateTime.parse(msg['created_at'])),
                               isMe: isMe,
-                            );
-                          },
+                      );
+                    },
                         ),
-                      ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -194,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: AppButton(
                     label: '',
                     icon: Icons.send,
-                    onPressed: sendMessage,
+                  onPressed: sendMessage,
                   ),
                 ),
               ],
