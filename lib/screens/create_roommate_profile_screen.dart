@@ -5,6 +5,7 @@ import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'roommate_finder_screen.dart';
+import 'main_screen.dart';
 
 /// The main screen for creating a roommate profile.
 class CreateRoommateProfileScreen extends StatefulWidget {
@@ -80,6 +81,16 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Roommate Profile'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Exit',
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const MainScreen()),
+              (route) => false,
+            );
+          },
+        ),
       ),
       body: Form(
         key: _formKey,

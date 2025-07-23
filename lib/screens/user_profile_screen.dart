@@ -77,7 +77,54 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           children: [
             // Profile Tab
             _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 1500),
+                          builder: (context, value, child) {
+                            return Transform.rotate(
+                              angle: value * 2 * 3.14159,
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: Colors.indigo,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.indigo,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          onEnd: () {
+                            if (_isLoading) {
+                              setState(() {});
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Loading profile...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.indigo,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : _profile == null
                     ? const Center(child: Text('Profile not found.'))
                     : SingleChildScrollView(
@@ -92,17 +139,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Center(
-                                    child: Semantics(
-                                      label: 'Profile picture',
-                                      image: true,
-                                    child: CircleAvatar(
-                                      radius: 48,
-                                      backgroundImage: _profile!['profile_picture_url'] != null
-                                          ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                                          : null,
-                                      child: _profile!['profile_picture_url'] == null
-                                          ? const Icon(Icons.person, size: 48)
-                                          : null,
+                                    child: Hero(
+                                      tag: 'profile_${_profile!['id'] ?? _profile!['user_id']}',
+                                      child: Semantics(
+                                        label: 'Profile picture',
+                                        image: true,
+                                      child: CircleAvatar(
+                                        radius: 48,
+                                        backgroundImage: _profile!['profile_picture_url'] != null
+                                            ? NetworkImage('${_profile!['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                            : null,
+                                        child: _profile!['profile_picture_url'] == null
+                                            ? const Icon(Icons.person, size: 48)
+                                            : null,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -290,7 +340,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           itemBuilder: (context, index) {
             final post = posts[index];
             final profile = _profile ?? {};
-            return PostCard(post: post, profile: profile);
+            return PostCard(post: post, profile: profile, index: index);
           },
         );
       },

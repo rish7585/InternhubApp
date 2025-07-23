@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? label;
   final String? hint;
   final IconData? prefixIcon;
-  final TextInputType? keyboardType;
   final bool obscureText;
+  final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final int? maxLines;
   final bool enabled;
-  final VoidCallback? onTap;
-  final Widget? suffixIcon;
-  final bool showSuccessState;
 
   const AppTextField({
     super.key,
@@ -20,111 +17,126 @@ class AppTextField extends StatelessWidget {
     this.label,
     this.hint,
     this.prefixIcon,
-    this.keyboardType,
     this.obscureText = false,
+    this.keyboardType,
     this.validator,
     this.maxLines = 1,
     this.enabled = true,
-    this.onTap,
-    this.suffixIcon,
-    this.showSuccessState = false,
   });
+
+  @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _focusAnimationController;
+  late Animation<double> _focusAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _focusAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(
+      parent: _focusAnimationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _focusAnimationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (label != null) ...[
-          Text(
-            label!,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : Colors.grey.shade700,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          validator: validator,
-          maxLines: maxLines,
-          enabled: enabled,
-          onTap: onTap,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white : Colors.grey.shade900,
-            letterSpacing: -0.3,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: isDark ? Colors.white54 : Colors.grey.shade400,
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-            ),
-            prefixIcon: prefixIcon != null
-                ? Icon(
-                    prefixIcon,
-                    color: isDark ? Colors.white54 : Colors.grey.shade500,
-                    size: 20,
-                  )
-                : null,
-            suffixIcon: suffixIcon ?? (showSuccessState 
-                ? Icon(
-                    Icons.check_circle,
-                    color: Colors.green.shade500,
-                    size: 20,
-                  )
-                : null),
-            filled: true,
-            fillColor: enabled 
-                ? (isDark ? const Color(0xFF23262F) : Colors.grey.shade50)
-                : (isDark ? Colors.grey.shade800 : Colors.grey.shade100),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: showSuccessState 
-                    ? Colors.green.shade400 
-                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+    return AnimatedBuilder(
+      animation: _focusAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _focusAnimation.value,
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (hasFocus) {
+                _focusAnimationController.forward();
+              } else {
+                _focusAnimationController.reverse();
+              }
+            },
+            child: TextFormField(
+              controller: widget.controller,
+              obscureText: widget.obscureText,
+              keyboardType: widget.keyboardType,
+              maxLines: widget.maxLines,
+              enabled: widget.enabled,
+              validator: widget.validator,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 16,
+              ),
+              decoration: InputDecoration(
+                labelText: widget.label,
+                hintText: widget.hint,
+                prefixIcon: widget.prefixIcon != null
+                    ? Icon(
+                        widget.prefixIcon,
+                        color: isDark ? Colors.white70 : Colors.grey.shade600,
+                      )
+                    : null,
+                filled: true,
+                fillColor: isDark ? Colors.grey[850] : Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white24 : Colors.black26,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white24 : Colors.black26,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Colors.red.shade400,
+                    width: 2,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Colors.red.shade400,
+                    width: 2,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade300),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade400, width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: prefixIcon != null ? 16 : 16,
-            ),
-            errorStyle: TextStyle(
-              color: Colors.red.shade600,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 } 

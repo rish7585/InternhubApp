@@ -196,32 +196,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  AppTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    hint: 'Enter your password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: !_isPasswordVisible,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                        _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        prefixIcon: Icons.lock_outline,
+                        obscureText: !_isPasswordVisible,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters long';
+                          }
+                          return null;
                         },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters long';
-                      }
-                      return null;
-                    },
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          label: Text(_isPasswordVisible ? 'Hide' : 'Show'),
+                        ),
+                      ),
+                    ],
                   ),
                   Align(
                     alignment: Alignment.centerRight,

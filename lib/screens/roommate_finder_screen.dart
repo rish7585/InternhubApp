@@ -8,6 +8,7 @@ import '../widgets/app_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/roommate_profile.dart';
 import 'chat_screen.dart'; // Added import for ChatScreen
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 /// The main screen for finding roommates.
 class RoommateFinderScreen extends StatefulWidget {
@@ -83,7 +84,54 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 1500),
+                    builder: (context, value, child) {
+                      return Transform.rotate(
+                        angle: value * 2 * 3.14159,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                              color: Colors.indigo,
+                              width: 3,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.people,
+                              color: Colors.indigo,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    onEnd: () {
+                      if (_isLoading) {
+                        setState(() {});
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Finding roommates...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.indigo,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : Column(
         children: [
           Padding(
@@ -101,13 +149,24 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
           Expanded(
                   child: _roommatePosts.isEmpty
                       ? const Center(child: Text('No roommate posts yet.'))
-                      : ListView.builder(
-                          itemCount: _roommatePosts.length,
-              itemBuilder: (context, index) {
-                            final post = _roommatePosts[index];
-                            return _buildRoommateCard(post);
-              },
-            ),
+                      : AnimationLimiter(
+                          child: ListView.builder(
+                            itemCount: _roommatePosts.length,
+                            itemBuilder: (context, index) {
+                              final post = _roommatePosts[index];
+                              return AnimationConfiguration.staggeredList(
+                                position: index,
+                                duration: const Duration(milliseconds: 375),
+                                child: SlideAnimation(
+                                  verticalOffset: 50.0,
+                                  child: FadeInAnimation(
+                                    child: _buildRoommateCard(post),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
           ),
         ],
       ),
@@ -311,88 +370,92 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
     );
   }
 
-  /// Builds the filter UI.
+  /// Builds the filter UI with animation.
   Widget _buildFilters() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      color: isDark ? const Color(0xFF23262F) : Colors.white,
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Filters',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedLocation,
-              decoration: InputDecoration(
-              labelText: 'Location',
-                filled: true,
-                fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? Colors.white24 : Colors.black26,
-                  ),
-                ),
-            ),
-              dropdownColor: isDark ? Colors.grey[900] : Colors.white,
-            items: ['Any', 'San Francisco', 'New York', 'Seattle', 'Austin']
-                .map((location) => DropdownMenuItem(
-                      value: location,
-                      child: Text(location),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedLocation = value!;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          Column(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: Card(
+        color: isDark ? const Color(0xFF23262F) : Colors.white,
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Text('Max Budget:  24 24${_maxBudget.toInt()}',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
+              const Text(
+                'Filters',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedLocation,
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  filled: true,
+                  fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.white24 : Colors.black26,
+                    ),
                   ),
                 ),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: isDark ? Colors.indigoAccent : Colors.indigo,
-                    inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
-                    thumbColor: isDark ? Colors.indigoAccent : Colors.indigo,
-                    overlayColor: (isDark ? Colors.indigoAccent : Colors.indigo).withAlpha(32),
-                  ),
-                  child: Slider(
-                value: _maxBudget,
-                min: 500,
-                max: 5000,
-                divisions: 45,
-                    label: ' 24 24${_maxBudget.toInt()}',
+                dropdownColor: isDark ? Colors.grey[900] : Colors.white,
+                items: ['Any', 'San Francisco', 'New York', 'Seattle', 'Austin']
+                    .map((location) => DropdownMenuItem(
+                          value: location,
+                          child: Text(location),
+                        ))
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
-                    _maxBudget = value;
+                    _selectedLocation = value!;
                   });
                 },
               ),
-                ),
-              ],
-            ),
-          ],
+              const SizedBox(height: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Max Budget: \$${_maxBudget.toInt()}',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: isDark ? Colors.indigoAccent : Colors.indigo,
+                      inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+                      thumbColor: isDark ? Colors.indigoAccent : Colors.indigo,
+                      overlayColor: (isDark ? Colors.indigoAccent : Colors.indigo).withAlpha(32),
+                    ),
+                    child: Slider(
+                      value: _maxBudget,
+                      min: 500,
+                      max: 5000,
+                      divisions: 45,
+                      label: '\$${_maxBudget.toInt()}',
+                      onChanged: (value) {
+                        setState(() {
+                          _maxBudget = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

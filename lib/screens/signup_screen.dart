@@ -167,60 +167,76 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  AppTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    hint: 'Create a strong password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: !_isPasswordVisible,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                        _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        hint: 'Create a strong password',
+                        prefixIcon: Icons.lock_outline,
+                        obscureText: !_isPasswordVisible,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters long';
+                          }
+                          return null;
                         },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters long';
-                      }
-                      return null;
-                    },
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          label: Text(_isPasswordVisible ? 'Hide' : 'Show'),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  AppTextField(
-                    controller: _confirmPasswordController,
-                    label: 'Confirm Password',
-                    hint: 'Confirm your password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: !_isConfirmPasswordVisible,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                        _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      tooltip: _isConfirmPasswordVisible ? 'Hide password' : 'Show password',
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                          });
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppTextField(
+                        controller: _confirmPasswordController,
+                        label: 'Confirm Password',
+                        hint: 'Confirm your password',
+                        prefixIcon: Icons.lock_outline,
+                        obscureText: !_isConfirmPasswordVisible,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
                         },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            });
+                          },
+                          icon: Icon(
+                            _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          label: Text(_isConfirmPasswordVisible ? 'Hide' : 'Show'),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   AppButton(

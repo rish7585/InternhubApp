@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_screen.dart';
+import '../services/group_chat_service.dart';
+import '../services/channel_service.dart';
+import '../models/group.dart';
+import '../models/channel.dart';
+import 'group_chat_screen.dart';
+import 'thread_list_screen.dart';
 
 /// Messages Screen
 /// Shows a list of users the current user has messaged with. Tapping opens a chat.
@@ -14,20 +20,31 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   final userId = Supabase.instance.client.auth.currentUser?.id;
   List<Map<String, dynamic>> conversationUsers = [];
+  List<Group> userGroups = [];
+  List<Channel> userChannels = [];
   bool isLoading = true;
   String? errorMessage;
   String? profileId;
+  final groupChatService = GroupChatService(client: Supabase.instance.client);
+  final channelService = ChannelService(client: Supabase.instance.client);
 
   @override
   void initState() {
     super.initState();
-    fetchProfileAndConversations();
+    fetchAllData();
+  }
+
+  Future<void> fetchAllData() async {
+    await fetchProfileAndConversations();
+    await fetchGroupsAndChannels();
+    setState(() { isLoading = false; });
   }
 
   /// Fetches the current user's profile and all conversations.
   Future<void> fetchProfileAndConversations() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
         errorMessage = 'User not authenticated.';
@@ -43,6 +60,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     print('DEBUG: profiles query result:');
     print(profiles);
     if (profiles == null || profiles.isEmpty) {
+      if (!mounted) return;
       setState(() {
         conversationUsers = [];
         isLoading = false;
@@ -69,6 +87,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       if (msg['receiver_id'] != userId) userIds.add(msg['receiver_id']);
     }
     if (userIds.isEmpty) {
+      if (!mounted) return;
       setState(() {
         conversationUsers = [];
         isLoading = false;
@@ -80,10 +99,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
         .from('profiles')
         .select('id, first_name, last_name, profile_picture_url')
         .inFilter('id', userIds.toList());
+    if (!mounted) return;
     setState(() {
       conversationUsers = List<Map<String, dynamic>>.from(profiles);
       isLoading = false;
     });
+  }
+
+  Future<void> fetchGroupsAndChannels() async {
+    if (userId == null) return;
+    userGroups = await groupChatService.fetchUserGroups(userId!);
+    userChannels = await channelService.fetchChannels();
+    // Optionally filter channels by membership if you have a channel_members table
+    if (!mounted) return;
+    setState(() {});
   }
 
   /// Opens the chat screen with the selected user.
@@ -160,7 +189,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       );
     }
     
-    if (conversationUsers.isEmpty) {
+    if (conversationUsers.isEmpty && userGroups.isEmpty && userChannels.isEmpty) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Messages'),
@@ -211,57 +240,107 @@ class _MessagesScreenState extends State<MessagesScreen> {
       appBar: AppBar(
         title: const Text('Messages'),
       ),
-      body: ListView.builder(
-      itemCount: conversationUsers.length,
-      itemBuilder: (context, index) {
-        final user = conversationUsers[index];
-          final userName = '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
-          final displayName = userName.isNotEmpty ? userName : 'Unknown User';
-          
-          return Semantics(
-            label: 'Conversation with $displayName',
-            child: ListTile(
-              leading: Semantics(
-                label: 'Profile picture of $displayName',
-                image: true,
-                child: user['profile_picture_url'] != null && user['profile_picture_url'].toString().isNotEmpty
-              ? CircleAvatar(
-                  backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
-                )
-                    : CircleAvatar(
-                        backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.grey.shade700 
-                            : Colors.grey.shade300,
-                        child: Icon(
-                          Icons.person,
-                          color: Theme.of(context).brightness == Brightness.dark 
-                              ? Colors.white 
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-              ),
-              title: Text(
-                displayName,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.white 
-                      : Colors.black87,
-                ),
-              ),
-              subtitle: Text(
-                'Tap to open conversation',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.white60 
-                      : Colors.black54,
-                ),
-              ),
-          onTap: () => openChatWithUser(user),
+      body: ListView(
+        children: [
+          if (conversationUsers.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text('Direct Messages', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
-        );
-      },
+            ...conversationUsers.map((user) {
+              final userName = '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
+              final displayName = userName.isNotEmpty ? userName : 'Unknown User';
+              return Semantics(
+                label: 'Conversation with $displayName',
+                child: ListTile(
+                  leading: Semantics(
+                    label: 'Profile picture of $displayName',
+                    image: true,
+                    child: user['profile_picture_url'] != null && user['profile_picture_url'].toString().isNotEmpty
+                        ? Hero(
+                            tag: 'profile_${user['id']}',
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}'),
+                            ),
+                          )
+                        : CircleAvatar(
+                            backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.grey.shade700 
+                                : Colors.grey.shade300,
+                            child: Icon(
+                              Icons.person,
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white 
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                  ),
+                  title: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.white 
+                          : Colors.black87,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Tap to open conversation',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.white60 
+                          : Colors.black54,
+                    ),
+                  ),
+                  onTap: () => openChatWithUser(user),
+                ),
+              );
+            }).toList(),
+          ],
+          if (userGroups.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text('Groups', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+            ...userGroups.map((group) => ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.group)),
+                  title: Text(group.name),
+                  subtitle: Text(group.description ?? ''),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => GroupChatScreen(
+                        group: group,
+                        groupChatService: groupChatService,
+                        userId: userId ?? '',
+                      ),
+                    ),
+                  ),
+                )),
+          ],
+          if (userChannels.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text('Channels', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+            ...userChannels.map((channel) => ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.forum)),
+                  title: Text(channel.name),
+                  subtitle: Text(channel.description ?? ''),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ThreadListScreen(
+                        channel: channel,
+                        channelService: channelService,
+                        userId: userId,
+                      ),
+                    ),
+                  ),
+                )),
+          ],
+        ],
       ),
     );
   }

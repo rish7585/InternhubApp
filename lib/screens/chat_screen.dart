@@ -19,7 +19,6 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final userId = Supabase.instance.client.auth.currentUser?.id;
   final TextEditingController _controller = TextEditingController();
   List<dynamic> messages = [];
   bool isLoading = true;
@@ -33,6 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// Fetches all messages between the current user and the other user.
   Future<void> fetchMessages() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
     final response = await Supabase.instance.client
         .from('messages')
@@ -47,6 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// Sends a new message to the other user.
   Future<void> sendMessage() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
     final text = _controller.text.trim();
     if (text.isEmpty || userId == null) return;
     await Supabase.instance.client.from('messages').insert({
@@ -54,6 +55,24 @@ class _ChatScreenState extends State<ChatScreen> {
       'receiver_id': widget.otherUserId,
       'content': text,
       'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    // Fetch sender name
+    final profileRes = await Supabase.instance.client.from('profiles').select('first_name, last_name').eq('id', userId).maybeSingle();
+    final senderName = profileRes != null
+        ? ((profileRes['first_name'] ?? '') + ' ' + (profileRes['last_name'] ?? '')).trim()
+        : 'Someone';
+    // Call Edge Function for push notification
+    await Supabase.instance.client.functions.invoke('send-push-notification', body: {
+      'type': 'dm',
+      'sender_id': userId,
+      'recipient_id': widget.otherUserId,
+      'message': {
+        'title': 'New message from $senderName',
+        'body': text,
+        'data': {
+          'dm_user_id': userId,
+        }
+      }
     });
     _controller.clear();
     fetchMessages();
@@ -78,6 +97,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String? rawPic = widget.otherUserProfilePic;
+    String? url = (rawPic != null && rawPic.isNotEmpty) ? rawPic : null;
+    Widget avatar;
+    if (url != null) {
+      final String safeUrl = url + '?v=${DateTime.now().millisecondsSinceEpoch}';
+      avatar = CircleAvatar(
+        radius: 18,
+        backgroundImage: NetworkImage(safeUrl),
+      );
+    } else {
+      avatar = CircleAvatar(
+        radius: 18,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark 
+            ? Colors.grey.shade700 
+            : Colors.grey.shade300,
+        child: Icon(
+          Icons.person,
+          size: 18,
+          color: Theme.of(context).brightness == Brightness.dark 
+              ? Colors.white 
+              : Colors.grey.shade600,
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -85,25 +128,8 @@ class _ChatScreenState extends State<ChatScreen> {
             Semantics(
               label: 'Profile picture of ${widget.otherUserName}',
               image: true,
-              child: widget.otherUserProfilePic != null && widget.otherUserProfilePic!.isNotEmpty
-                  ? CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage('${widget.otherUserProfilePic}?v=${DateTime.now().millisecondsSinceEpoch}'),
-              )
-                  : CircleAvatar(
-                radius: 18,
-                      backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                          ? Colors.grey.shade700 
-                          : Colors.grey.shade300,
-                      child: Icon(
-                        Icons.person,
-                        size: 18,
-                        color: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.white 
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-              ),
+              child: avatar,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -167,6 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           itemCount: messages.length,
                           itemBuilder: (context, index) {
                             final msg = messages[index];
+                            final userId = Supabase.instance.client.auth.currentUser?.id;
                             final isMe = msg['sender_id'] == userId;
                             return ChatBubble(
                               content: msg['content'],

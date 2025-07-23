@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view_profile_screen.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -73,7 +74,7 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0,
       ),
       body: Column(
-          children: [
+        children: [
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -89,10 +90,10 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Semantics(
               label: 'Search for interns by name, company, or location',
               child: TextField(
-              controller: _searchController,
+                controller: _searchController,
                 style: TextStyle(color: theme.colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Search by name, company, or location',
+                decoration: InputDecoration(
+                  hintText: 'Search by name, company, or location',
                   hintStyle: TextStyle(
                     color: isDark ? Colors.white54 : Colors.grey.shade400,
                     fontSize: 16,
@@ -115,18 +116,61 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
                   ),
-                filled: true,
+                  filled: true,
                   fillColor: theme.cardColor,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
               ),
-            ),
             ),
           ),
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 1500),
+                          builder: (context, value, child) {
+                            return Transform.rotate(
+                              angle: value * 2 * 3.14159,
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: const Color(0xFF2563EB),
+                                    width: 3,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.search,
+                                    color: Color(0xFF2563EB),
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          onEnd: () {
+                            if (_isLoading) {
+                              setState(() {});
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Searching...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF2563EB),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : _error != null
@@ -154,7 +198,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark ? Colors.white54 : Colors.grey.shade500,
-              ),
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -191,98 +235,109 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           )
                         : _results.isNotEmpty
-                            ? ListView.separated(
-                                padding: const EdgeInsets.all(20),
-                  itemCount: _results.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final user = _results[index];
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: theme.cardColor,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, width: 1),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.04),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Semantics(
-                                      label: 'Search result for ${user['first_name']} ${user['last_name']}',
-                      child: ListTile(
-                                        contentPadding: const EdgeInsets.all(16),
-                                        leading: Semantics(
-                                          label: 'Profile picture of ${user['first_name']} ${user['last_name']}',
-                                          image: true,
-                                          child: CircleAvatar(
-                                            radius: 24,
-                          backgroundImage: user['profile_picture_url'] != null
-                              ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
-                              : null,
-                                            backgroundColor: isDark ? Colors.grey[800] : Colors.grey.shade200,
-                          child: user['profile_picture_url'] == null
-                                                ? Icon(Icons.person, size: 24, color: isDark ? Colors.white : Colors.grey.shade600)
-                              : null,
-                                          ),
-                        ),
-                        title: Text(
-                          '${user['first_name']} ${user['last_name']}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                            color: theme.colorScheme.onSurface,
-                                            letterSpacing: -0.3,
-                                          ),
-                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                                            if (user['company'] != null && user['company'].toString().isNotEmpty)
-                                              Text(
-                                                user['company'],
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                                                  fontWeight: FontWeight.w500,
+                            ? AnimationLimiter(
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.all(20),
+                                  itemCount: _results.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    final user = _results[index];
+                                    return AnimationConfiguration.staggeredList(
+                                      position: index,
+                                      duration: const Duration(milliseconds: 375),
+                                      child: SlideAnimation(
+                                        verticalOffset: 50.0,
+                                        child: FadeInAnimation(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: theme.cardColor,
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, width: 1),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.04),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Semantics(
+                                              label: 'Search result for ${user['first_name']} ${user['last_name']}',
+                                              child: ListTile(
+                                                contentPadding: const EdgeInsets.all(16),
+                                                leading: Semantics(
+                                                  label: 'Profile picture of ${user['first_name']} ${user['last_name']}',
+                                                  image: true,
+                                                  child: CircleAvatar(
+                                                    radius: 24,
+                                                    backgroundImage: user['profile_picture_url'] != null
+                                                        ? NetworkImage('${user['profile_picture_url']}?v=${DateTime.now().millisecondsSinceEpoch}')
+                                                        : null,
+                                                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey.shade200,
+                                                    child: user['profile_picture_url'] == null
+                                                        ? Icon(Icons.person, size: 24, color: isDark ? Colors.white : Colors.grey.shade600)
+                                                        : null,
+                                                  ),
+                                                ),
+                                                title: Text(
+                                                  '${user['first_name']} ${user['last_name']}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16,
+                                                    color: theme.colorScheme.onSurface,
+                                                    letterSpacing: -0.3,
+                                                  ),
+                                                ),
+                                                subtitle: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    if (user['company'] != null && user['company'].toString().isNotEmpty)
+                                                      Text(
+                                                        user['company'],
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: isDark ? Colors.white70 : Colors.grey.shade600,
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    if (user['location'] != null && user['location'].toString().isNotEmpty)
+                                                      Text(
+                                                        user['location'],
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: isDark ? Colors.white54 : Colors.grey.shade500,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                                trailing: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFF2563EB),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Semantics(
+                                                    label: 'View profile',
+                                                    child: IconButton(
+                                                      icon: const Icon(Icons.person, color: Colors.white, size: 20),
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) => ViewProfileScreen(profile: user),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            if (user['location'] != null && user['location'].toString().isNotEmpty)
-                                              Text(
-                                                user['location'],
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        trailing: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF2563EB),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Semantics(
-                                            label: 'View profile',
-                                            child: IconButton(
-                                              icon: const Icon(Icons.person, color: Colors.white, size: 20),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ViewProfileScreen(profile: user),
-                                  ),
-                                );
-                              },
-                            ),
+                                            ),
                                           ),
                                         ),
-                        ),
-                      ),
-                    );
-                  },
+                                      ),
+                                    );
+                                  },
+                                ),
                               )
                             : Center(
                                 child: Column(
@@ -313,9 +368,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ],
                                 ),
-                ),
-              ),
-          ],
+                              ),
+          ),
+        ],
       ),
     );
   }

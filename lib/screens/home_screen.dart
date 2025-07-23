@@ -5,6 +5,7 @@ import '../services/profile_service.dart';
 import '../widgets/post_card.dart';
 import 'settings_screen.dart';
 import 'user_profile_screen.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -80,15 +81,58 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       color: isDark ? const Color(0xFF181A20) : Colors.grey.shade50,
       child: Stack(
-      children: [
-        _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+        children: [
+          _isLoading
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 1500),
+                        builder: (context, value, child) {
+                          return Transform.rotate(
+                            angle: value * 2 * 3.14159,
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                border: Border.all(
+                                  color: const Color(0xFF2563EB),
+                                  width: 3,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.home,
+                                  color: Color(0xFF2563EB),
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        onEnd: () {
+                          if (_isLoading) {
+                            setState(() {});
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Loading your feed...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF2563EB),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 )
-            : RefreshIndicator(
-                onRefresh: () async {
+              : RefreshIndicator(
+                  onRefresh: () async {
                     await _loadUserInfo();
                     await _loadPosts();
                   },
@@ -96,15 +140,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? Center(
                           child: Semantics(
                             label: 'No posts available',
-                                    child: Column(
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
+                              children: [
                                 Icon(
                                   Icons.feed_outlined,
                                   size: 64,
                                   color: isDark ? Colors.white24 : Colors.grey.shade400,
                                   semanticLabel: 'Empty feed icon',
-                                              ),
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'No posts yet',
@@ -113,72 +157,87 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: isDark ? Colors.white70 : Colors.grey.shade600,
                                   ),
-                                              ),
+                                ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Be the first to share something!',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                                ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          itemCount: _posts.length + 2,
-                              itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return Semantics(
-                                header: true,
-                                label: 'Feed header with post count',
-                                child: Container(
-                                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        'Feed',
-                                        style: TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.w700,
-                                          color: isDark ? Colors.white : Colors.grey.shade900,
-                                          letterSpacing: -1,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF2563EB),
-                                          borderRadius: BorderRadius.circular(20),
-                                          ),
-                                        child: Text(
-                                          '${_posts.length} posts',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ),
-                              );
-                            }
-                            if (index == _posts.length + 1) {
-                              return const SizedBox(height: 32);
-                            }
-                            final post = _posts[index - 1];
-                            final profile = post['profiles'] ?? {};
-                            return PostCard(post: post, profile: profile);
-                              },
+                              ],
                             ),
                           ),
-                  ],
+                        )
+                      : AnimationLimiter(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            itemCount: _posts.length + 2,
+                            itemBuilder: (context, index) {
+                              if (index == 0) {
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 375),
+                                  child: SlideAnimation(
+                                    verticalOffset: 50.0,
+                                    child: FadeInAnimation(
+                                      child: Semantics(
+                                        header: true,
+                                        label: 'Feed header with post count',
+                                        child: Container(
+                                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                'Feed',
+                                                style: TextStyle(
+                                                  fontSize: 28,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isDark ? Colors.white : Colors.grey.shade900,
+                                                  letterSpacing: -1,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF2563EB),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                child: Text(
+                                                  '${_posts.length} posts',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              if (index == _posts.length + 1) {
+                                return const SizedBox(height: 32);
+                              }
+                              final post = _posts[index - 1];
+                              final profile = post['profiles'] ?? {};
+                              return PostCard(
+                                post: post, 
+                                profile: profile,
+                                index: index,
+                              );
+                            },
+                          ),
+                        ),
                 ),
+        ],
+      ),
     );
   }
 
