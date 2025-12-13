@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/app_button.dart';
@@ -79,27 +80,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         imageQuality: 85,
       );
       if (pickedFile != null) {
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: pickedFile.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Crop Image',
-              toolbarColor: Colors.indigo,
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false,
-            ),
-            IOSUiSettings(
-              title: 'Crop Image',
-            ),
-          ],
-        );
-        if (croppedFile != null) {
-          final bytes = await croppedFile.readAsBytes();
-        setState(() {
-          _profileImageBytes = bytes;
-        });
+        // On web, image cropper may not be available, so use the image directly
+        if (kIsWeb) {
+          final bytes = await pickedFile.readAsBytes();
+          setState(() {
+            _profileImageBytes = bytes;
+          });
+        } else {
+          final croppedFile = await ImageCropper().cropImage(
+            sourcePath: pickedFile.path,
+            aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+            uiSettings: [
+              AndroidUiSettings(
+                toolbarTitle: 'Crop Image',
+                toolbarColor: Colors.indigo,
+                toolbarWidgetColor: Colors.white,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: false,
+              ),
+              IOSUiSettings(
+                title: 'Crop Image',
+              ),
+            ],
+          );
+          if (croppedFile != null) {
+            final bytes = await croppedFile.readAsBytes();
+            setState(() {
+              _profileImageBytes = bytes;
+            });
+          }
         }
       }
     } catch (error) {
@@ -156,7 +165,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (user == null) throw 'User not authenticated';
       String? imageUrl = _profilePictureUrl;
       if (_profileImageBytes != null) {
-        imageUrl = await _profileService.uploadProfilePicture(user.id, _profileImageBytes!);
+        try {
+          imageUrl = await _profileService.uploadProfilePicture(user.id, _profileImageBytes!);
+        } catch (uploadError) {
+          print('Profile picture upload error: $uploadError');
+          throw 'Failed to upload profile picture: ${uploadError.toString()}';
+        }
       }
       await _profileService.createProfile(
         userId: user.id,
@@ -176,8 +190,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } catch (e) {
+      print('Save profile error: $e');
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.toString().replaceAll('Exception: ', '').replaceAll('Error: ', '');
       });
     } finally {
       setState(() => _isSaving = false);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/app_button.dart';
@@ -61,27 +62,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       );
 
       if (pickedFile != null) {
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: pickedFile.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Crop Image',
-              toolbarColor: Colors.indigo,
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false,
-            ),
-            IOSUiSettings(
-              title: 'Crop Image',
-            ),
-          ],
-        );
-        if (croppedFile != null) {
-          final bytes = await croppedFile.readAsBytes();
-        setState(() {
-          _profileImageBytes = bytes;
-        });
+        // On web, image cropper may not be available, so use the image directly
+        if (kIsWeb) {
+          final bytes = await pickedFile.readAsBytes();
+          setState(() {
+            _profileImageBytes = bytes;
+          });
+        } else {
+          final croppedFile = await ImageCropper().cropImage(
+            sourcePath: pickedFile.path,
+            aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+            uiSettings: [
+              AndroidUiSettings(
+                toolbarTitle: 'Crop Image',
+                toolbarColor: Colors.indigo,
+                toolbarWidgetColor: Colors.white,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: false,
+              ),
+              IOSUiSettings(
+                title: 'Crop Image',
+              ),
+            ],
+          );
+          if (croppedFile != null) {
+            final bytes = await croppedFile.readAsBytes();
+            setState(() {
+              _profileImageBytes = bytes;
+            });
+          }
         }
       }
     } catch (error) {

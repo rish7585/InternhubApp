@@ -11,7 +11,8 @@ import '../services/group_chat_service.dart';
 import '../services/channel_service.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  final int initialIndex;
+  const MainScreen({Key? key, this.initialIndex = 0}) : super(key: key);
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -19,12 +20,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen>
     with TickerProviderStateMixin {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _selectedIndex);
   }
 
@@ -107,7 +109,7 @@ class _MainScreenState extends State<MainScreen>
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

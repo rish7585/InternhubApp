@@ -224,7 +224,6 @@ class _MyAppState extends State<MyApp> {
               error: Colors.red[400]!,
               onError: Colors.white,
               background: const Color(0xFF181A20),
-              onBackground: Colors.white,
               surface: const Color(0xFF23262F),
               onSurface: Colors.white,
             ),
@@ -306,7 +305,9 @@ class _MyAppState extends State<MyApp> {
               backgroundColor: Color(0xFF23262F),
               contentTextStyle: TextStyle(color: Colors.white),
       ),
-            dialogBackgroundColor: const Color(0xFF23262F),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF23262F),
+            ),
           ),
           themeMode: themeNotifier.themeMode,
           locale: localeNotifier.locale,

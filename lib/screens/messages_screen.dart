@@ -5,6 +5,7 @@ import '../services/group_chat_service.dart';
 import '../services/channel_service.dart';
 import '../models/group.dart';
 import '../models/channel.dart';
+import '../widgets/empty_state.dart';
 import 'group_chat_screen.dart';
 import 'thread_list_screen.dart';
 
@@ -51,11 +52,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
       });
       return;
     }
-    // Fetch the current user's profile to get the user_id
+    // Fetch the current user's profile - profiles.id matches auth.users.id
     final profiles = await Supabase.instance.client
         .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
+        .select('id, user_id')
+        .eq('id', user.id)
         .limit(1);
     print('DEBUG: profiles query result:');
     print(profiles);
@@ -68,7 +69,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       });
       return;
     }
-    profileId = profiles[0]['user_id'] as String?;
+    profileId = profiles[0]['id'] as String?;
     await fetchConversations();
   }
 
@@ -136,8 +137,30 @@ class _MessagesScreenState extends State<MessagesScreen> {
         appBar: AppBar(
           title: const Text('Messages'),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading messages...',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -194,44 +217,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
         appBar: AppBar(
           title: const Text('Messages'),
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 64,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade400 
-                      : Colors.grey.shade600,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Conversations Yet',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white 
-                        : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Start a conversation by connecting with other users',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white70 
-                        : Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        body: EmptyState(
+          icon: Icons.chat_bubble_outline,
+          title: 'No Conversations Yet',
+          message: 'Start a conversation by connecting with other users or joining groups and channels.',
         ),
       );
     }

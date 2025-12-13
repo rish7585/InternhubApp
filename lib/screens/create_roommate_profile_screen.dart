@@ -514,7 +514,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
       );
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const RoommateFinderScreen()),
+            MaterialPageRoute(builder: (_) => const MainScreen(initialIndex: 4)), // Navigate to Roommate tab (index 4)
             (route) => false,
           );
         });

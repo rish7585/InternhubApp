@@ -84,11 +84,18 @@ class ProfileService {
 
   String _handleError(dynamic error) {
     print('Supabase error: $error'); // Debug print
+    print('Error type: ${error.runtimeType}'); // Debug print
     if (error is PostgrestException) {
       return error.message;
+    } else if (error is StorageException) {
+      return 'Storage error: ${error.message}';
+    } else if (error is AuthException) {
+      return 'Authentication error: ${error.message}';
     } else if (error is String) {
       return error;
+    } else if (error is Exception) {
+      return error.toString();
     }
-    return 'An unexpected error occurred';
+    return 'An unexpected error occurred: ${error.toString()}';
   }
 } 

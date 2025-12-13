@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view_profile_screen.dart';
+import '../widgets/empty_state.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -81,7 +82,7 @@ class _SearchScreenState extends State<SearchScreen> {
               color: theme.cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -205,34 +206,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       )
                     : _results.isEmpty && _searchController.text.isNotEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 64,
-                                  color: isDark ? Colors.white24 : Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No results found',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.onBackground,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Try searching with different keywords',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ? EmptyState(
+                            icon: Icons.search_off,
+                            title: 'No results found',
+                            message: 'Try searching with different keywords or check your spelling.',
                           )
                         : _results.isNotEmpty
                             ? AnimationLimiter(
@@ -255,7 +232,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                               border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, width: 1),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.04),
+                                                  color: Colors.black.withValues(alpha: 0.04),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 2),
                                                 ),

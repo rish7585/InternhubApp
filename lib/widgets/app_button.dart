@@ -76,8 +76,8 @@ class _AppButtonState extends State<AppButton>
                 child: InkWell(
                   onTap: widget.isLoading ? null : _handleTap,
                   borderRadius: BorderRadius.circular(12),
-                  splashColor: buttonColor.withOpacity(0.2),
-                  highlightColor: buttonColor.withOpacity(0.1),
+                  splashColor: buttonColor.withValues(alpha: 0.2),
+                  highlightColor: buttonColor.withValues(alpha: 0.1),
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: buttonColor, width: 1.5),
@@ -108,8 +108,8 @@ class _AppButtonState extends State<AppButton>
               child: InkWell(
                 onTap: widget.isLoading ? null : _handleTap,
                 borderRadius: BorderRadius.circular(12),
-                splashColor: Colors.white.withOpacity(0.2),
-                highlightColor: Colors.white.withOpacity(0.1),
+                splashColor: Colors.white.withValues(alpha: 0.2),
+                highlightColor: Colors.white.withValues(alpha: 0.1),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: _buildButtonContent(Colors.white),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/group.dart';
 import '../models/presence_and_read.dart';
 import '../models/message_reaction.dart';
@@ -145,15 +145,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _pickAndSendImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1200);
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1200,
+    );
     if (picked == null) return;
     setState(() => _isUploading = true);
     try {
-      final file = File(picked.path);
+      final bytes = await picked.readAsBytes();
       final fileName = '${widget.userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storagePath = 'group_images/${widget.group.id}/$fileName';
       final storage = Supabase.instance.client.storage.from('chat-media');
-      await storage.upload(storagePath, file);
+      await storage.uploadBinary(
+        storagePath,
+        bytes,
+        fileOptions: const FileOptions(contentType: 'image/jpeg'),
+      );
       final imageUrl = storage.getPublicUrl(storagePath);
       await widget.groupChatService.sendGroupMessage(
         GroupMessage(

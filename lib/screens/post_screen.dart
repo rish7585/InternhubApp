@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'dart:math';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';

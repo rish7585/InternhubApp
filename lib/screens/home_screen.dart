@@ -3,8 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/post_card.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/loading_skeleton.dart';
+import '../constants/app_spacing.dart';
 import 'settings_screen.dart';
 import 'user_profile_screen.dart';
+import 'post_screen.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -83,53 +87,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Stack(
         children: [
           _isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 1500),
-                        builder: (context, value, child) {
-                          return Transform.rotate(
-                            angle: value * 2 * 3.14159,
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                border: Border.all(
-                                  color: const Color(0xFF2563EB),
-                                  width: 3,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.home,
-                                  color: Color(0xFF2563EB),
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        onEnd: () {
-                          if (_isLoading) {
-                            setState(() {});
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Loading your feed...',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+              ? ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  itemCount: 3,
+                  itemBuilder: (context, index) => const PostCardSkeleton(),
                 )
               : RefreshIndicator(
                   onRefresh: () async {
@@ -137,36 +98,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     await _loadPosts();
                   },
                   child: _posts.isEmpty
-                      ? Center(
-                          child: Semantics(
-                            label: 'No posts available',
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.feed_outlined,
-                                  size: 64,
-                                  color: isDark ? Colors.white24 : Colors.grey.shade400,
-                                  semanticLabel: 'Empty feed icon',
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No posts yet',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white70 : Colors.grey.shade600,
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: EmptyState(
+                            icon: Icons.feed_outlined,
+                            title: 'No posts yet',
+                            message: 'Your feed is empty. Start following people or create your first post!',
+                            action: Padding(
+                              padding: const EdgeInsets.only(top: AppSpacing.md),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const PostScreen()),
+                                  );
+                                },
+                                icon: const Icon(Icons.add_circle_outline),
+                                label: const Text('Create Post'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.lg,
+                                    vertical: AppSpacing.md,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Be the first to share something!',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDark ? Colors.white54 : Colors.grey.shade500,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         )
