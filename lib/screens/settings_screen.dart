@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../screens/login_screen.dart';
+import 'login_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_of_use_screen.dart';
 import '../notifiers/theme_notifier.dart';
 import '../notifiers/locale_notifier.dart';
-import '../services/auth_service.dart';
+import '../core/service_locator.dart';
+import '../utils/page_transitions.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -20,7 +23,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isProfilePublic = true;
   String userId = '';
   String accountCreated = '';
-  final _authService = AuthService();
 
   @override
   void initState() {
@@ -29,7 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _fetchAccountInfo() async {
-    final user = _authService.currentUser;
+    final user = serviceLocator.authService.currentUser;
     if (user != null) {
       setState(() {
         userId = user.id;
@@ -69,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await _authService.signOut();
+    await serviceLocator.authService.signOut();
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -127,34 +129,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showTerms() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Terms of Service'),
-        content: const Text('Terms of Service are coming soon. This will outline the rules and guidelines for using InternHub.'),
-        actions: [
-          TextButton(
-            child: const Text('OK'), 
-            onPressed: () => Navigator.pop(context)
-          ),
-        ],
-      ),
+    Navigator.push(
+      context,
+      PageTransitions.slideRight(page: const TermsOfUseScreen()),
     );
   }
 
   void _showPrivacy() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Privacy Policy'),
-        content: const Text('Privacy Policy is coming soon. This will explain how we collect, use, and protect your personal information.'),
-        actions: [
-          TextButton(
-            child: const Text('OK'), 
-            onPressed: () => Navigator.pop(context)
-          ),
-        ],
-      ),
+    Navigator.push(
+      context,
+      PageTransitions.slideRight(page: const PrivacyPolicyScreen()),
     );
   }
 

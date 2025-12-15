@@ -3,8 +3,11 @@
 /// Allows searching, filtering, and (soon) posting roommate ads.
 import 'package:flutter/material.dart';
 import 'create_roommate_profile_screen.dart';
+import 'roommate_map_screen.dart';
+import 'roommate_swipe_screen.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
+import '../utils/page_transitions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/roommate_profile.dart';
 import 'chat_screen.dart'; // Added import for ChatScreen
@@ -74,7 +77,28 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         title: const Text('Find Roommates'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.swipe),
+            tooltip: 'Swipe View',
+            onPressed: () {
+              Navigator.push(
+                context,
+                PageTransitions.slideRight(page: const RoommateSwipeScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.map),
+            tooltip: 'Map View',
+            onPressed: () {
+              Navigator.push(
+                context,
+                PageTransitions.slideRight(page: const RoommateMapScreen()),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(_showFilters ? Icons.filter_list : Icons.filter_list_outlined),
+            tooltip: 'Filters',
             onPressed: () {
               setState(() {
                 _showFilters = !_showFilters;

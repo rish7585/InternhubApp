@@ -15,6 +15,8 @@ class RoommateProfile {
   final List<String> interests;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double? latitude;
+  final double? longitude;
 
   RoommateProfile({
     required this.id,
@@ -33,6 +35,8 @@ class RoommateProfile {
     required this.interests,
     required this.createdAt,
     required this.updatedAt,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toJson() {
@@ -53,6 +57,8 @@ class RoommateProfile {
       'interests': interests,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -74,6 +80,8 @@ class RoommateProfile {
       interests: List<String>.from(json['interests']),
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
+      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
     );
   }
 } 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../utils/error_handler.dart';
+import '../utils/page_transitions.dart';
 import 'package:email_validator/email_validator.dart';
-import '../services/auth_service.dart';
-import '../services/profile_service.dart';
+import '../core/service_locator.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import 'main_screen.dart';
@@ -19,8 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  final _profileService = ProfileService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -40,30 +39,31 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        final response = await _authService.signIn(
+        final response = await serviceLocator.authService.signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
         
         // Check if user has a profile
-        final hasProfile = await _profileService.hasProfile(response.user!.id);
+        final hasProfile = await serviceLocator.profileService.hasProfile(response.user!.id);
         
         if (mounted) {
           if (hasProfile) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const MainScreen()),
+              PageTransitions.fade(page: const MainScreen()),
             );
           } else {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
+              PageTransitions.fade(page: const ProfileSetupScreen()),
             );
           }
         }
       } catch (error) {
+        ErrorHandler.showError(context, error);
         setState(() {
-          _errorMessage = error.toString();
+          _errorMessage = ErrorHandler.getErrorMessage(error);
         });
       } finally {
         if (mounted) {
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.resetPassword(email);
+      await serviceLocator.authService.resetPassword(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

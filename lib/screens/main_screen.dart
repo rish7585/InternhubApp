@@ -7,8 +7,9 @@ import 'messages_screen.dart';
 import 'roommate_finder_screen.dart';
 import 'group_chat_list_screen.dart';
 import 'channel_list_screen.dart';
-import '../services/group_chat_service.dart';
-import '../services/channel_service.dart';
+import '../core/service_locator.dart';
+import '../utils/page_transitions.dart';
+import '../utils/offline_handler.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -28,6 +29,20 @@ class _MainScreenState extends State<MainScreen>
     super.initState();
     _selectedIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _selectedIndex);
+    _checkOfflineStatus();
+  }
+
+  void _checkOfflineStatus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        OfflineHandler.showOfflineBanner(context);
+      }
+    });
+    OfflineHandler.addListener(() {
+      if (mounted) {
+        OfflineHandler.showOfflineBanner(context);
+      }
+    });
   }
 
   @override
@@ -57,11 +72,11 @@ class _MainScreenState extends State<MainScreen>
       const MessagesScreen(),
       const RoommateFinderScreen(),
       GroupChatListScreen(
-        groupChatService: GroupChatService(client: Supabase.instance.client),
+        groupChatService: serviceLocator.groupChatService,
         userId: userId,
       ),
       ChannelListScreen(
-        channelService: ChannelService(client: Supabase.instance.client),
+        channelService: serviceLocator.channelService,
         // userId not needed here, but can be added if required
       ),
     ];
@@ -105,6 +120,25 @@ class _MainScreenState extends State<MainScreen>
         },
         children: screens,
       ),
+      floatingActionButton: _selectedIndex == 0 || _selectedIndex == 4
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageTransitions.slideUp(page: const PostScreen()),
+                ).then((_) {
+                  // Refresh home feed if returning from post creation
+                  if (_selectedIndex == 0 && mounted) {
+                    // Trigger refresh in HomeScreen if needed
+                  }
+                });
+              },
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+              tooltip: 'Create Post',
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/auth_service.dart';
-import '../services/profile_service.dart';
+import '../core/service_locator.dart';
 import '../widgets/post_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/loading_skeleton.dart';
@@ -19,11 +18,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _authService = AuthService();
-  final _profileService = ProfileService();
 
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMorePosts = true;
+  int _currentPage = 0;
+  final int _postsPerPage = 10;
   String? _userProfilePicture;
 
   @override
@@ -34,12 +35,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadUserInfo() async {
-    final user = _authService.currentUser;
+    final user = serviceLocator.authService.currentUser;
     if (user == null) {
       setState(() {});
       return;
     }
-    final profile = await _profileService.getProfile(user.id);
+    final profile = await serviceLocator.profileService.getProfile(user.id);
     if (profile == null) {
       setState(() {});
       return;
@@ -49,11 +50,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadPosts() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadPosts({bool loadMore = false}) async {
+    if (loadMore) {
+      if (_isLoadingMore || !_hasMorePosts) return;
+      setState(() => _isLoadingMore = true);
+    } else {
+      setState(() {
+        _isLoading = true;
+        _currentPage = 0;
+        _posts = [];
+        _hasMorePosts = true;
+      });
+    }
+
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw 'User not authenticated';
+      
       // Fetch following user IDs
       final following = await Supabase.instance.client
           .from('connections')
@@ -61,19 +74,35 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('follower_id', user.id);
       final followingIds = List<String>.from(following.map((f) => f['following_id']));
       followingIds.add(user.id); // include own posts
+      
+      // Calculate pagination
+      final from = _currentPage * _postsPerPage;
+      final to = from + _postsPerPage - 1;
+      
       final response = await Supabase.instance.client
           .from('posts')
           .select('*, profiles!inner(id, first_name, last_name, profile_picture_url)')
           .inFilter('user_id', followingIds)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .range(from, to);
+      
+      final newPosts = List<Map<String, dynamic>>.from(response);
+      
       setState(() {
-        _posts = List<Map<String, dynamic>>.from(response);
+        if (loadMore) {
+          _posts.addAll(newPosts);
+        } else {
+          _posts = newPosts;
+        }
+        _hasMorePosts = newPosts.length == _postsPerPage;
+        _currentPage++;
         _isLoading = false;
+        _isLoadingMore = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
-        // _errorMessage = e.toString(); // This line was removed
+        _isLoadingMore = false;
       });
     }
   }
@@ -95,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : RefreshIndicator(
                   onRefresh: () async {
                     await _loadUserInfo();
-                    await _loadPosts();
+                    await _loadPosts(loadMore: false);
                   },
                   child: _posts.isEmpty
                       ? SingleChildScrollView(
@@ -125,10 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         )
-                      : AnimationLimiter(
+                        : AnimationLimiter(
                           child: ListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            itemCount: _posts.length + 2,
+                            itemCount: _posts.length + 2 + (_hasMorePosts ? 1 : 0),
                             itemBuilder: (context, index) {
                               if (index == 0) {
                                 return AnimationConfiguration.staggeredList(
@@ -178,6 +207,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               }
                               if (index == _posts.length + 1) {
+                                // Load more trigger
+                                if (_hasMorePosts && !_isLoadingMore) {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    _loadPosts(loadMore: true);
+                                  });
+                                }
+                                if (_isLoadingMore) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Center(child: CircularProgressIndicator()),
+                                  );
+                                }
                                 return const SizedBox(height: 32);
                               }
                               final post = _posts[index - 1];

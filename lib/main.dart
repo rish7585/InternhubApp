@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,11 +7,10 @@ import 'notifiers/theme_notifier.dart';
 import 'notifiers/locale_notifier.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'services/group_chat_service.dart';
-import 'services/channel_service.dart';
-import 'services/profile_service.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/channel_list_screen.dart';
 import 'screens/thread_list_screen.dart';
@@ -18,6 +18,8 @@ import 'screens/thread_view_screen.dart';
 import 'screens/chat_screen.dart';
 import 'models/group.dart';
 import 'models/channel.dart';
+import 'utils/offline_handler.dart';
+import 'core/service_locator.dart';
 import 'firebase_options.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -53,9 +55,10 @@ void setupFCMTokenSync(String userId) {
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-final groupChatService = GroupChatService(client: Supabase.instance.client);
-final channelService = ChannelService(client: Supabase.instance.client);
-final profileService = ProfileService();
+Future<bool> _checkOnboardingStatus() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('onboarding_completed') ?? false;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +70,12 @@ void main() async {
     url: 'https://cdxayouiebaimtkjxxwu.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkeGF5b3VpZWJhaW10a2p4eHd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1ODE2MTQsImV4cCI6MjA4MTE1NzYxNH0.-fisWdGSw3tLtBJAVMKqf8ZUnQmpPZKI7hjpePpuQkA',
   );
+  // Initialize offline handler
+  await OfflineHandler.initialize();
+  
+  // Initialize service locator
+  serviceLocator.initialize();
+  
   runApp(
     MultiProvider(
       providers: [
@@ -91,6 +100,24 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _initFirebaseMessaging();
     _setupNotificationTapHandler();
+    _setupOfflineListener();
+  }
+
+  void _setupOfflineListener() {
+    OfflineHandler.addListener(() {
+      if (mounted) {
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          OfflineHandler.showOfflineBanner(context);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    OfflineHandler.dispose();
+    super.dispose();
   }
 
   void _initFirebaseMessaging() async {
@@ -137,7 +164,8 @@ class _MyAppState extends State<MyApp> {
               seedColor: const Color(0xFF2563EB),
           brightness: Brightness.light,
         ),
-            fontFamily: 'Inter',
+            textTheme: GoogleFonts.interTextTheme(),
+            fontFamily: GoogleFonts.inter().fontFamily,
         appBarTheme: const AppBarTheme(
               elevation: 0,
               centerTitle: true,
@@ -215,6 +243,8 @@ class _MyAppState extends State<MyApp> {
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
+            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+            fontFamily: GoogleFonts.inter().fontFamily,
             colorScheme: ColorScheme(
               brightness: Brightness.dark,
               primary: const Color(0xFF2563EB),
@@ -320,19 +350,36 @@ class _MyAppState extends State<MyApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: StreamBuilder<AuthState>(
-            stream: Supabase.instance.client.auth.onAuthStateChange,
+          home: FutureBuilder<bool>(
+            future: _checkOnboardingStatus(),
             builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final session = snapshot.data!.session;
-                if (session != null) {
-                  // Set up FCM token sync for logged-in user
-                  final userId = session.user.id;
-                  setupFCMTokenSync(userId);
-                  return const MainScreen();
-                }
+              if (!snapshot.hasData) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
               }
-              return const LoginScreen();
+              
+              final hasCompletedOnboarding = snapshot.data ?? false;
+              
+              if (!hasCompletedOnboarding) {
+                return const OnboardingScreen();
+              }
+              
+              return StreamBuilder<AuthState>(
+                stream: Supabase.instance.client.auth.onAuthStateChange,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final session = snapshot.data!.session;
+                    if (session != null) {
+                      // Set up FCM token sync for logged-in user
+                      final userId = session.user.id;
+                      setupFCMTokenSync(userId);
+                      return const MainScreen();
+                    }
+                  }
+                  return const LoginScreen();
+                },
+              );
             },
           ),
           routes: {
@@ -347,7 +394,7 @@ class _MyAppState extends State<MyApp> {
                   if (group == null) return const Scaffold(body: Center(child: Text('Group not found')));
                   return GroupChatScreen(
                     group: Group.fromJson(group),
-                    groupChatService: groupChatService,
+                    groupChatService: serviceLocator.groupChatService,
                     userId: userId,
                   );
                 },
@@ -364,7 +411,7 @@ class _MyAppState extends State<MyApp> {
                   if (channel == null) return const Scaffold(body: Center(child: Text('Channel not found')));
                   return ThreadListScreen(
                     channel: Channel.fromJson(channel),
-                    channelService: channelService,
+                    channelService: serviceLocator.channelService,
                     userId: userId,
                   );
                 },
@@ -381,7 +428,7 @@ class _MyAppState extends State<MyApp> {
                   if (thread == null) return const Scaffold(body: Center(child: Text('Thread not found')));
                   return ThreadViewScreen(
                     thread: Thread.fromJson(thread),
-                    channelService: channelService,
+                    channelService: serviceLocator.channelService,
                     userId: userId,
                   );
                 },
@@ -390,7 +437,7 @@ class _MyAppState extends State<MyApp> {
             '/dm': (context) {
               final userId = ModalRoute.of(context)!.settings.arguments as String;
               return FutureBuilder(
-                future: profileService.getProfile(userId),
+                future: serviceLocator.profileService.getProfile(userId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
                   final profile = snapshot.data;
