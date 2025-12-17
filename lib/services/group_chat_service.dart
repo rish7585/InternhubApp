@@ -193,4 +193,25 @@ class GroupChatService {
         .gt('created_at', lastRead.toIso8601String());
     return (response as List).length;
   }
+
+  // Add a member to a group
+  Future<void> addMemberToGroup({
+    required String groupId,
+    required String userId,
+  }) async {
+    await client.from('group_members').upsert({
+      'group_id': groupId,
+      'user_id': userId,
+      'joined_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Fetch group members with profiles
+  Future<List<Map<String, dynamic>>> fetchGroupMembers(String groupId) async {
+    final response = await client
+        .from('group_members')
+        .select('user_id, profiles(id, first_name, last_name, email, profile_picture_url)')
+        .eq('group_id', groupId);
+    return List<Map<String, dynamic>>.from(response);
+  }
 } 

@@ -23,11 +23,31 @@ class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> messages = [];
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
+  bool _showScrollToBottom = false;
+  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     fetchMessages();
+    _scrollController.addListener(() {
+      if (!_scrollController.hasClients) return;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = _scrollController.offset;
+      final atBottom = offset >= maxExtent - 50;
+      if (_showScrollToBottom == atBottom) return;
+      setState(() {
+        _showScrollToBottom = !atBottom;
+      });
+    });
+    _controller.addListener(() {
+      final isTypingNow = _controller.text.trim().isNotEmpty;
+      if (isTypingNow != _isTyping) {
+        setState(() {
+          _isTyping = isTypingNow;
+        });
+      }
+    });
   }
 
   /// Fetches all messages between the current user and the other user.
@@ -43,6 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
       messages = response;
       isLoading = false;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   /// Sends a new message to the other user.
@@ -87,6 +108,13 @@ class _ChatScreenState extends State<ChatScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -141,92 +169,123 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : messages.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: 64,
-                                color: Theme.of(context).brightness == Brightness.dark 
-                                    ? Colors.grey.shade400 
-                                    : Colors.grey.shade600,
+          Column(
+            children: [
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : messages.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline,
+                                    size: 64,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No Messages Yet',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Start the conversation by sending a message',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No Messages Yet',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).brightness == Brightness.dark 
-                                      ? Colors.white 
-                                      : Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Start the conversation by sending a message',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Theme.of(context).brightness == Brightness.dark 
-                                      ? Colors.white70 
-                                      : Colors.black54,
-                                ),
-                              ),
-                            ],
+                            ),
+                          )
+                        : Semantics(
+                            label: 'Chat messages',
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              itemCount: messages.length,
+                              itemBuilder: (context, index) {
+                                final msg = messages[index];
+                                final userId = Supabase.instance.client.auth.currentUser?.id;
+                                final isMe = msg['sender_id'] == userId;
+                                return ChatBubble(
+                                  content: msg['content'],
+                                  timestamp:
+                                      timeago.format(DateTime.parse(msg['created_at'])),
+                                  isMe: isMe,
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      )
-                    : Semantics(
-                        label: 'Chat messages',
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) {
-                            final msg = messages[index];
-                            final userId = Supabase.instance.client.auth.currentUser?.id;
-                            final isMe = msg['sender_id'] == userId;
-                            return ChatBubble(
-                              content: msg['content'],
-                              timestamp: timeago.format(DateTime.parse(msg['created_at'])),
-                              isMe: isMe,
-                      );
-                    },
-                        ),
+              ),
+              if (_isTyping)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Typing...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.grey.shade600,
+                      ),
+                    ),
                   ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        controller: _controller,
+                        label: 'Type a message...',
+                        hint: 'Type a message...',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Tooltip(
+                      message: 'Send message',
+                      child: AppButton(
+                        label: '',
+                        icon: Icons.send,
+                        onPressed: sendMessage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    controller: _controller,
-                    label: 'Type a message...',
-                    hint: 'Type a message...',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: 'Send message',
-                  child: AppButton(
-                    label: '',
-                    icon: Icons.send,
-                  onPressed: sendMessage,
-                  ),
-                ),
-              ],
+          if (_showScrollToBottom)
+            Positioned(
+              right: 16,
+              bottom: 80,
+              child: FloatingActionButton(
+                mini: true,
+                onPressed: _scrollToBottom,
+                child: const Icon(Icons.arrow_downward),
+              ),
             ),
-          ),
         ],
       ),
     );

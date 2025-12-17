@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
+import '../constants/app_spacing.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -85,7 +87,10 @@ class _PostCardState extends State<PostCard>
             container: true,
             label: 'Post by ${widget.profile['first_name'] ?? ''} ${widget.profile['last_name'] ?? ''}',
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
@@ -103,7 +108,7 @@ class _PostCardState extends State<PostCard>
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     child: Row(
                       children: [
                         Hero(
@@ -123,7 +128,7 @@ class _PostCardState extends State<PostCard>
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +166,7 @@ class _PostCardState extends State<PostCard>
                   // Content
                   if (widget.post['content'] != null && widget.post['content'].toString().isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: Semantics(
                         label: 'Post content',
                         child: Text(
@@ -177,7 +182,7 @@ class _PostCardState extends State<PostCard>
                     ),
                   // Image
                   if (widget.post['image_url'] != null && widget.post['image_url'].toString().isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
                     Semantics(
                       label: 'Post image',
                       image: true,
@@ -205,35 +210,43 @@ class _PostCardState extends State<PostCard>
                   ],
                   // Actions
                   Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        _buildAnimatedLikeButton(context),
-                        const SizedBox(width: 24),
-                        _buildActionButton(
-                          context: context,
-                          icon: Icons.chat_bubble_outline,
-                          label: 'Comment',
-                          onPressed: () {},
-                          tooltip: 'Comment on post',
-                        ),
-                        const SizedBox(width: 24),
-                        _buildActionButton(
-                          context: context,
-                          icon: Icons.share_outlined,
-                          label: 'Share',
-                          onPressed: () {},
-                          tooltip: 'Share post',
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: Icon(Icons.bookmark_border, color: isDark ? Colors.white54 : Colors.grey.shade500),
-                          tooltip: 'Bookmark post',
-                          onPressed: () {},
-                          padding: const EdgeInsets.all(12),
-                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                        ),
-                      ],
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Wrap(
+                          spacing: AppSpacing.lg,
+                          runSpacing: AppSpacing.sm,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          alignment: WrapAlignment.spaceBetween,
+                          children: [
+                            _buildAnimatedLikeButton(context),
+                            _buildActionButton(
+                              context: context,
+                              icon: Icons.chat_bubble_outline,
+                              label: 'Comment',
+                              onPressed: () {},
+                              tooltip: 'Comment on post',
+                            ),
+                            _buildActionButton(
+                              context: context,
+                              icon: Icons.share_outlined,
+                              label: 'Share',
+                              onPressed: () {},
+                              tooltip: 'Share post',
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: IconButton(
+                                icon: Icon(Icons.bookmark_border, color: isDark ? Colors.white54 : Colors.grey.shade500),
+                                tooltip: 'Bookmark post',
+                                onPressed: () {},
+                                padding: const EdgeInsets.all(12),
+                                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -271,7 +284,7 @@ class _PostCardState extends State<PostCard>
                       color: _likeColorAnimation.value ?? (isDark ? Colors.white70 : Colors.grey.shade600),
                       semanticLabel: _isLiked ? 'Liked' : 'Like',
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'Like',
                       style: TextStyle(
@@ -317,7 +330,7 @@ class _PostCardState extends State<PostCard>
                 color: isDark ? Colors.white70 : Colors.grey.shade600,
                 semanticLabel: label,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
                 style: TextStyle(

@@ -8,6 +8,7 @@ import '../models/channel.dart';
 import '../widgets/empty_state.dart';
 import 'group_chat_screen.dart';
 import 'thread_list_screen.dart';
+import '../utils/error_handler.dart';
 
 /// Messages Screen
 /// Shows a list of users the current user has messaged with. Tapping opens a chat.
@@ -116,6 +117,127 @@ class _MessagesScreenState extends State<MessagesScreen> {
     setState(() {});
   }
 
+  Future<void> _showCreateMenu() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.group_add),
+              title: const Text('Create Group'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _promptCreateGroup();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.forum),
+              title: const Text('Create Channel'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _promptCreateChannel();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _promptCreateGroup() async {
+    final nameController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Create Group'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(labelText: 'Group name'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty || userId == null) return;
+              try {
+                // Create group
+                final groupRes = await Supabase.instance.client
+                    .from('groups')
+                    .insert({
+                      'name': name,
+                      'created_by': userId,
+                      'created_at': DateTime.now().toIso8601String(),
+                    })
+                    .select()
+                    .maybeSingle();
+                if (groupRes != null) {
+                  final group = Group.fromJson(groupRes);
+                  // Add current user as member
+                  await Supabase.instance.client.from('group_members').upsert({
+                    'group_id': group.id,
+                    'user_id': userId,
+                    'joined_at': DateTime.now().toIso8601String(),
+                  });
+                  await fetchGroupsAndChannels();
+                }
+                if (mounted) Navigator.pop(ctx);
+              } catch (e) {
+                if (mounted) ErrorHandler.showError(context, e, customMessage: 'Failed to create group');
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _promptCreateChannel() async {
+    final nameController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Create Channel'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(labelText: 'Channel name'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty || userId == null) return;
+              try {
+                final channelRes = await Supabase.instance.client
+                    .from('channels')
+                    .insert({
+                      'name': name,
+                      'created_by': userId,
+                      'created_at': DateTime.now().toIso8601String(),
+                    })
+                    .select()
+                    .maybeSingle();
+                if (channelRes != null) {
+                  await fetchGroupsAndChannels();
+                }
+                if (mounted) Navigator.pop(ctx);
+              } catch (e) {
+                if (mounted) ErrorHandler.showError(context, e, customMessage: 'Failed to create channel');
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Opens the chat screen with the selected user.
   Future<void> openChatWithUser(Map<String, dynamic> user) async {
     Navigator.push(
@@ -212,26 +334,46 @@ class _MessagesScreenState extends State<MessagesScreen> {
       );
     }
     
-    if (conversationUsers.isEmpty && userGroups.isEmpty && userChannels.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Messages'),
-        ),
-        body: EmptyState(
-          icon: Icons.chat_bubble_outline,
-          title: 'No Conversations Yet',
-          message: 'Start a conversation by connecting with other users or joining groups and channels.',
-        ),
-      );
-    }
-    
+    final hasAnyConversations =
+        conversationUsers.isNotEmpty || userGroups.isNotEmpty || userChannels.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
+        actions: [
+          IconButton(
+            tooltip: 'Create group or channel',
+            icon: const Icon(Icons.add),
+            onPressed: _showCreateMenu,
+          ),
+        ],
       ),
-      body: ListView(
-        children: [
-          if (conversationUsers.isNotEmpty) ...[
+      body: hasAnyConversations
+          ? ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.group_add),
+                          label: const Text('New Group'),
+                          onPressed: _promptCreateGroup,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.forum),
+                          label: const Text('New Channel'),
+                          onPressed: _promptCreateChannel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (conversationUsers.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text('Direct Messages', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -287,7 +429,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               );
             }).toList(),
           ],
-          if (userGroups.isNotEmpty) ...[
+                if (userGroups.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text('Groups', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -308,7 +450,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                 )),
           ],
-          if (userChannels.isNotEmpty) ...[
+                if (userChannels.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text('Channels', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -329,8 +471,42 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                 )),
           ],
-        ],
-      ),
+              ],
+            )
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.group_add),
+                          label: const Text('New Group'),
+                          onPressed: _promptCreateGroup,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.forum),
+                          label: const Text('New Channel'),
+                          onPressed: _promptCreateChannel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.chat_bubble_outline,
+                    title: 'No Conversations Yet',
+                    message:
+                        'Start a conversation by creating a group or channel, or messaging someone from their profile.',
+                  ),
+                ),
+              ],
+            ),
     );
   }
 } 

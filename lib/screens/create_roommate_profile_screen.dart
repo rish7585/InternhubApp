@@ -6,10 +6,12 @@ import '../widgets/app_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'roommate_finder_screen.dart';
 import 'main_screen.dart';
+import '../models/roommate_profile.dart';
 
 /// The main screen for creating a roommate profile.
 class CreateRoommateProfileScreen extends StatefulWidget {
-  const CreateRoommateProfileScreen({Key? key}) : super(key: key);
+  final RoommateProfile? existingProfile;
+  const CreateRoommateProfileScreen({Key? key, this.existingProfile}) : super(key: key);
 
   @override
   State<CreateRoommateProfileScreen> createState() => _CreateRoommateProfileScreenState();
@@ -35,6 +37,31 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
   String _leaseDuration = '12 months';
   List<String> _selectedPreferences = [];
   List<String> _selectedInterests = [];
+  bool _isSubmitting = false;
+  bool get _isEditing => widget.existingProfile != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing && widget.existingProfile != null) {
+      _prefillFromProfile(widget.existingProfile!);
+    }
+  }
+
+  void _prefillFromProfile(RoommateProfile profile) {
+    _nameController.text = profile.name;
+    _phoneController.text = profile.phone;
+    _schoolController.text = profile.school;
+    _companyController.text = profile.company;
+    _desiredBuildingController.text = profile.desiredBuilding;
+    _locationController.text = profile.location;
+    _socialLinkController.text = profile.socialLink ?? '';
+    _personalBioController.text = profile.personalBio;
+    _budget = profile.budget;
+    _leaseDuration = profile.leaseDuration;
+    _selectedPreferences = List<String>.from(profile.roommatePreferences);
+    _selectedInterests = List<String>.from(profile.interests);
+  }
   
   // Available options
   final List<String> _leaseDurations = [
@@ -80,7 +107,7 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Roommate Profile'),
+        title: Text(_isEditing ? 'Edit Roommate Profile' : 'Create Roommate Profile'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           tooltip: 'Exit',
@@ -459,7 +486,9 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
             child: Semantics(
               label: _currentPage < 3 ? 'Next button' : 'Create Profile button',
               child: AppButton(
-                label: _currentPage < 3 ? 'Next' : 'Create Profile',
+                label: _currentPage < 3
+                    ? 'Next'
+                    : (_isEditing ? 'Save Changes' : 'Create Profile'),
               onPressed: () {
                 if (_currentPage < 3) {
                   _pageController.nextPage(
@@ -488,8 +517,10 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
         );
         return;
       }
+      if (_isSubmitting) return;
+      setState(() => _isSubmitting = true);
       try {
-        await Supabase.instance.client.from('roommate_profiles').insert({
+        final payload = {
           'user_id': user.id,
           'name': _nameController.text,
           'phone': _phoneController.text,
@@ -503,18 +534,29 @@ class _CreateRoommateProfileScreenState extends State<CreateRoommateProfileScree
           'social_link': _socialLinkController.text.isEmpty ? null : _socialLinkController.text,
           'personal_bio': _personalBioController.text,
           'interests': _selectedInterests,
-          'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
-        });
+        };
+
+        if (_isEditing) {
+          await Supabase.instance.client
+              .from('roommate_profiles')
+              .update(payload)
+              .eq('id', widget.existingProfile!.id);
+        } else {
+          await Supabase.instance.client.from('roommate_profiles').insert({
+            ...payload,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Roommate profile created successfully!'),
+          content: Text('Roommate profile saved successfully!'),
           backgroundColor: Colors.green,
         ),
       );
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const MainScreen(initialIndex: 4)), // Navigate to Roommate tab (index 4)
+            MaterialPageRoute(builder: (_) => const MainScreen(initialIndex: 1)), // Navigate to Roommates tab (index 1)
             (route) => false,
           );
         });

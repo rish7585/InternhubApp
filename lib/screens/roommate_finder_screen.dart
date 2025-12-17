@@ -72,7 +72,10 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredRoommates = _getFilteredRoommates();
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Find Roommates'),
         actions: [
@@ -156,45 +159,73 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
                 ],
               ),
             )
-          : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-                  child: AppTextField(
-              controller: _searchController,
-                    label: 'Search roommates...',
-                    hint: 'Search roommates...',
-                    prefixIcon: Icons.search,
-            ),
-          ),
-          if (_showFilters) _buildFilters(),
-                if (_myProfile != null) _buildMyProfileCard(_myProfile!),
-                const SizedBox(height: 8),
-          Expanded(
-                  child: _roommatePosts.isEmpty
-                      ? const Center(child: Text('No roommate posts yet.'))
-                      : AnimationLimiter(
-                          child: ListView.builder(
-                            itemCount: _roommatePosts.length,
-                            itemBuilder: (context, index) {
-                              final post = _roommatePosts[index];
-                              return AnimationConfiguration.staggeredList(
-                                position: index,
-                                duration: const Duration(milliseconds: 375),
-                                child: SlideAnimation(
-                                  verticalOffset: 50.0,
-                                  child: FadeInAnimation(
-                                    child: _buildRoommateCard(post),
-                                  ),
-                                ),
-                              );
-                            },
+          : SafeArea(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.only(bottom: viewInsets),
+                child: AnimationLimiter(
+                  child: CustomScrollView(
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: AppTextField(
+                            controller: _searchController,
+                            label: 'Search roommates...',
+                            hint: 'Search roommates...',
+                            prefixIcon: Icons.search,
                           ),
                         ),
-          ),
-        ],
-      ),
+                      ),
+                      if (_showFilters)
+                        SliverToBoxAdapter(
+                          child: _buildFilters(),
+                        ),
+                      if (_myProfile != null)
+                        SliverToBoxAdapter(
+                          child: _buildMyProfileCard(_myProfile!),
+                        ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                      if (filteredRoommates.isEmpty)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24.0),
+                            child: Center(
+                              child: Text('No roommate posts match your search or filters.'),
+                            ),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.only(bottom: 96),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final post = filteredRoommates[index];
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 375),
+                                  child: SlideAnimation(
+                                    verticalOffset: 50.0,
+                                    child: FadeInAnimation(
+                                      child: _buildRoommateCard(post),
+                                    ),
+                                  ),
+                                );
+                              },
+                              childCount: filteredRoommates.length,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'roommate_fab',
         onPressed: () {
           // Navigate to create roommate profile screen for posting ads
           Navigator.of(context).push(
@@ -245,11 +276,37 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
               ),
               Semantics(
                 label: 'Budget',
-                child: Text(' 24${profile.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+                child: Text('\$${profile.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
               ),
               Semantics(
                 label: 'Bio',
                 child: Text(profile.personalBio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (profile.school.isNotEmpty)
+                    Chip(
+                      label: Text(profile.school),
+                      visualDensity: VisualDensity.compact,
+                      labelStyle: const TextStyle(fontSize: 11),
+                    ),
+                  if (profile.company.isNotEmpty)
+                    Chip(
+                      label: Text(profile.company),
+                      visualDensity: VisualDensity.compact,
+                      labelStyle: const TextStyle(fontSize: 11),
+                    ),
+                  ...profile.interests.take(3).map(
+                        (interest) => Chip(
+                          label: Text(interest),
+                          visualDensity: VisualDensity.compact,
+                          labelStyle: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                ],
               ),
             ],
           ),
@@ -259,7 +316,11 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
               label: 'Edit',
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => CreateRoommateProfileScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => CreateRoommateProfileScreen(
+                      existingProfile: profile,
+                    ),
+                  ),
                 );
               },
             ),
@@ -307,11 +368,37 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
               ),
               Semantics(
                 label: 'Budget',
-                child: Text(' 24${post.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+                child: Text('\$${post.budget.toStringAsFixed(0)}/month', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
               ),
               Semantics(
                 label: 'Bio',
                 child: Text(post.personalBio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (post.school.isNotEmpty)
+                    Chip(
+                      label: Text(post.school),
+                      visualDensity: VisualDensity.compact,
+                      labelStyle: const TextStyle(fontSize: 11),
+                    ),
+                  if (post.company.isNotEmpty)
+                    Chip(
+                      label: Text(post.company),
+                      visualDensity: VisualDensity.compact,
+                      labelStyle: const TextStyle(fontSize: 11),
+                    ),
+                  ...post.interests.take(3).map(
+                        (interest) => Chip(
+                          label: Text(interest),
+                          visualDensity: VisualDensity.compact,
+                          labelStyle: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                ],
               ),
             ],
           ),
@@ -483,6 +570,29 @@ class _RoommateFinderScreenState extends State<RoommateFinderScreen> {
         ),
       ),
     );
+  }
+
+  /// Applies search and filter criteria to roommate posts.
+  List<RoommateProfile> _getFilteredRoommates() {
+    final query = _searchController.text.trim().toLowerCase();
+    return _roommatePosts.where((post) {
+      if (_selectedLocation != 'Any' &&
+          post.location.toLowerCase() != _selectedLocation.toLowerCase()) {
+        return false;
+      }
+      if (post.budget > _maxBudget) {
+        return false;
+      }
+      if (query.isNotEmpty) {
+        final haystack =
+            '${post.name} ${post.location} ${post.school} ${post.company} ${post.personalBio}'
+                .toLowerCase();
+        if (!haystack.contains(query)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
   }
 
   @override

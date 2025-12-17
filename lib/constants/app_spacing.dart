@@ -15,7 +15,7 @@ class AppSpacing {
   
   // Component-specific spacing
   static const double cardPadding = 16.0;
-  static const double screenPadding = 24.0;
+  static const double screenPadding = 16.0;
   static const double buttonPadding = 12.0;
   static const double inputPadding = 16.0;
   

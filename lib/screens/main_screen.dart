@@ -1,13 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
-import 'search_screen.dart';
 import 'post_screen.dart';
 import 'messages_screen.dart';
 import 'roommate_finder_screen.dart';
-import 'group_chat_list_screen.dart';
-import 'channel_list_screen.dart';
-import '../core/service_locator.dart';
+import 'user_profile_screen.dart';
 import '../utils/page_transitions.dart';
 import '../utils/offline_handler.dart';
 
@@ -19,16 +16,50 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>
-    with TickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> {
   late int _selectedIndex;
-  late PageController _pageController;
+  final PageStorageBucket _bucket = PageStorageBucket();
+  late final List<Widget> _screens;
+  late final List<BottomNavigationBarItem> _items;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: _selectedIndex);
+    _screens = const [
+      HomeScreen(key: PageStorageKey('home')),
+      RoommateFinderScreen(key: PageStorageKey('roommates')),
+      PostScreen(key: PageStorageKey('post')),
+      MessagesScreen(key: PageStorageKey('messages')),
+      UserProfileScreen(key: PageStorageKey('profile')),
+    ];
+    _items = const [
+      BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.house),
+        activeIcon: Icon(CupertinoIcons.house_fill),
+        label: 'Home',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.person_2),
+        activeIcon: Icon(CupertinoIcons.person_2_fill),
+        label: 'Roommates',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.add_circled),
+        activeIcon: Icon(CupertinoIcons.add_circled_solid),
+        label: 'Post',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.bubble_left),
+        activeIcon: Icon(CupertinoIcons.bubble_left_fill),
+        label: 'Chat',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.person_crop_circle),
+        activeIcon: Icon(CupertinoIcons.person_crop_circle_fill),
+        label: 'Profile',
+      ),
+    ];
     _checkOfflineStatus();
   }
 
@@ -46,82 +77,28 @@ class _MainScreenState extends State<MainScreen>
   }
 
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
-    final List<Widget> screens = [
-      const HomeScreen(),
-      const SearchScreen(),
-      const PostScreen(),
-      const MessagesScreen(),
-      const RoommateFinderScreen(),
-      GroupChatListScreen(
-        groupChatService: serviceLocator.groupChatService,
-        userId: userId,
-      ),
-      ChannelListScreen(
-        channelService: serviceLocator.channelService,
-        // userId not needed here, but can be added if required
-      ),
-    ];
-    final List<BottomNavigationBarItem> items = [
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: 'Home',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.search),
-        label: 'Search',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.add_circle_outline),
-        label: 'Post',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.message),
-        label: 'Message',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.people),
-        label: 'Roommate',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.groups),
-        label: 'Groups',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.forum),
-        label: 'Channels',
-      ),
-    ];
+    final theme = Theme.of(context);
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        children: screens,
+      body: SafeArea(
+        child: PageStorage(
+          bucket: _bucket,
+          child: IndexedStack(
+            index: _selectedIndex,
+            children: _screens,
+          ),
+        ),
       ),
-      floatingActionButton: _selectedIndex == 0 || _selectedIndex == 4
+      floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
+              heroTag: 'home_fab',
               onPressed: () {
                 Navigator.push(
                   context,
@@ -139,27 +116,38 @@ class _MainScreenState extends State<MainScreen>
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.24 : 0.08,
+                ),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: theme.colorScheme.surface,
+              selectedItemColor: theme.colorScheme.primary,
+              unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+              selectedLabelStyle: theme.textTheme.labelLarge,
+              unselectedLabelStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              elevation: 0,
+              items: _items,
+              showUnselectedLabels: true,
             ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Colors.grey,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          elevation: 0,
-          items: items,
+          ),
         ),
       ),
     );

@@ -438,8 +438,9 @@ class _RoommateMapScreenState extends State<RoommateMapScreen> {
           child: EmptyState(
             icon: Icons.map_outlined,
             title: 'Map View Available on Mobile',
-            message: 'The interactive map feature is currently available on iOS and Android devices. On web, you can browse roommates using the list or swipe view.\n\n${_roommateProfiles.length} roommate${_roommateProfiles.length != 1 ? 's' : ''} found nearby.',
-            actionButton: _roommateProfiles.isNotEmpty
+            message:
+                'The interactive map feature is currently available on iOS and Android devices. On web, you can browse roommates using the list or swipe view.\n\n${_roommateProfiles.length} roommate${_roommateProfiles.length != 1 ? 's' : ''} found nearby.',
+            action: _roommateProfiles.isNotEmpty
                 ? ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);

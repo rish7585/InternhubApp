@@ -29,6 +29,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   GroupMessage? _editingMessage;
   final ProfileService _profileService = ProfileService();
   final Map<String, Map<String, dynamic>?> _profileCache = {};
+  bool _isAdding = false;
 
   @override
   void dispose() {
@@ -229,7 +230,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.group.name)),
+      appBar: AppBar(
+        title: Text(widget.group.name),
+        actions: [
+          IconButton(
+            tooltip: 'Add member',
+            icon: const Icon(Icons.person_add),
+            onPressed: _isAdding ? null : _promptAddMember,
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // Pinned messages
@@ -433,6 +443,69 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _promptAddMember() async {
+    final emailController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add member'),
+        content: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'User email'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isEmpty) return;
+              try {
+                setState(() => _isAdding = true);
+                // Find profile by email
+                final profile = await Supabase.instance.client
+                    .from('profiles')
+                    .select('id, email, first_name, last_name')
+                    .eq('email', email)
+                    .maybeSingle();
+                if (profile == null) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No user found with that email')),
+                    );
+                  }
+                  return;
+                }
+                final targetUserId = profile['id'] as String;
+                await widget.groupChatService.addMemberToGroup(
+                  groupId: widget.group.id,
+                  userId: targetUserId,
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Added ${profile['first_name'] ?? 'User'} to group')),
+                  );
+                  Navigator.pop(ctx);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to add member: $e')),
+                  );
+                }
+              } finally {
+                if (mounted) {
+                  setState(() => _isAdding = false);
+                }
+              }
+            },
+            child: const Text('Add'),
           ),
         ],
       ),

@@ -66,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw 'User not authenticated';
+      final cutoffIso = DateTime.now().subtract(const Duration(hours: 24)).toIso8601String();
       
       // Fetch following user IDs
       final following = await Supabase.instance.client
@@ -81,8 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
       
       final response = await Supabase.instance.client
           .from('posts')
-          .select('*, profiles!inner(id, first_name, last_name, profile_picture_url)')
+          .select('*, profiles(id, first_name, last_name, profile_picture_url)')
           .inFilter('user_id', followingIds)
+          .gte('created_at', cutoffIso)
           .order('created_at', ascending: false)
           .range(from, to);
       
@@ -110,14 +112,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFeed() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final background = theme.colorScheme.background;
     
     return Container(
-      color: isDark ? const Color(0xFF181A20) : Colors.grey.shade50,
+      color: background,
       child: Stack(
         children: [
           _isLoading
               ? ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   itemCount: 3,
                   itemBuilder: (context, index) => const PostCardSkeleton(),
                 )
@@ -156,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                         : AnimationLimiter(
                           child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                             itemCount: _posts.length + 2 + (_hasMorePosts ? 1 : 0),
                             itemBuilder: (context, index) {
                               if (index == 0) {
@@ -170,7 +173,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                         header: true,
                                         label: 'Feed header with post count',
                                         child: Container(
-                                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                                          padding: const EdgeInsets.fromLTRB(
+                                            AppSpacing.md,
+                                            AppSpacing.sm,
+                                            AppSpacing.md,
+                                            AppSpacing.md,
+                                          ),
                                           child: Row(
                                             children: [
                                               Text(
